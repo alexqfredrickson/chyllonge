@@ -19,6 +19,7 @@ def delete_all_tournaments():
         tournaments.delete(tournament_id=tid)
 
 
+# @unittest.skip
 class ChallongeAPITests(unittest.TestCase):
 
     def setUp(self):
@@ -38,6 +39,7 @@ class ChallongeAPITests(unittest.TestCase):
         self.assertIsNotNone(response)
 
 
+# @unittest.skip
 class TournamentAPITests(unittest.TestCase):
 
     def setUp(self):
@@ -160,6 +162,7 @@ class TournamentAPITests(unittest.TestCase):
         return self.assertTrue(r["tournament"]["state"] == "accepting_predictions")
 
 
+# @unittest.skip
 class ParticipantsAPITests(unittest.TestCase):
 
     @staticmethod
@@ -322,6 +325,7 @@ class ParticipantsAPITests(unittest.TestCase):
         self.assertTrue(ps[0]["participant"]["name"] != "Alice")
 
 
+# @unittest.skip
 class MatchAPITests(unittest.TestCase):
 
     def setUp(self):
@@ -408,6 +412,7 @@ class MatchAPITests(unittest.TestCase):
         self.assertIsNone(match["underway_at"])
 
 
+# @unittest.skip
 class AttachmentAPITests(unittest.TestCase):
 
     def setUp(self):
