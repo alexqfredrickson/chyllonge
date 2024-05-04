@@ -1,6 +1,7 @@
 import os
 import ast
 import json
+from datetime import datetime
 
 from typing import List
 
@@ -25,6 +26,9 @@ class ChallongeApi:
         self.key = os.environ["CHALLONGE_KEY"]
         self.basic_auth_param = (self.user, self.key)
         self.local_timezone = tzlocal.get_localzone()
+        self.now = datetime.now(tz=self.local_timezone)
+        self.now_utc_offset = self.now.strftime('%z')
+        self.local_timezone_utc_offset_string = self.now_utc_offset[0:-2] + ":" + self.now_utc_offset[-2:]
 
         # note that the user agent string is required to get around Cloudflare issues
         self.user_agent_param = {"User-Agent": "chyllonge"}
