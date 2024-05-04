@@ -51,8 +51,8 @@ class TournamentAPITests(unittest.TestCase):
         self.participants_api = ParticipantAPI()
         self.matches_api = MatchAPI()
 
-        # todo: local tz please
-        an_hour_from_now = (datetime.now() + timedelta(hours=1)).isoformat() + "-5:00"
+        an_hour_from_now = ((datetime.now() + timedelta(hours=1)).isoformat() +
+                            self.tournaments_api.local_timezone_utc_offset_string)
 
         self.tournament = self.tournaments_api.create(
             name="chyllonge-temp",
@@ -186,8 +186,8 @@ class ParticipantsAPITests(unittest.TestCase):
         self.tournaments_api = TournamentAPI()
         self.participants_api = ParticipantAPI()
 
-        # todo: local tz please
-        an_hour_from_now = (datetime.now() + timedelta(hours=1)).isoformat() + "-5:00"
+        an_hour_from_now = ((datetime.now() + timedelta(hours=1)).isoformat() +
+                            self.tournaments_api.local_timezone_utc_offset_string)
 
         self.tournament = self.tournaments_api.create(
             name="chyllonge-temp",
@@ -337,8 +337,8 @@ class MatchAPITests(unittest.TestCase):
         self.participants_api = ParticipantAPI()
         self.matches_api = MatchAPI()
 
-        # todo: local tz please
-        an_hour_from_now = (datetime.now() + timedelta(hours=1)).isoformat() + "-5:00"
+        an_hour_from_now = ((datetime.now() + timedelta(hours=1)).isoformat() +
+                            self.tournaments_api.local_timezone_utc_offset_string)
 
         self.tournament = self.tournaments_api.create(
             name="chyllonge-temp",
@@ -425,8 +425,8 @@ class AttachmentAPITests(unittest.TestCase):
         self.matches_api = MatchAPI()
         self.attachments_api = AttachmentAPI()
 
-        # todo: local tz please
-        an_hour_from_now = (datetime.now() + timedelta(hours=1)).isoformat() + "-5:00"
+        an_hour_from_now = ((datetime.now() + timedelta(hours=1)).isoformat() +
+                            self.tournaments_api.local_timezone_utc_offset_string)
 
         self.tournament = self.tournaments_api.create(
             name="chyllonge-temp",
