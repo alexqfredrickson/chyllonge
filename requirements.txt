@@ -1,2 +1,2 @@
-tzlocal
-requests
+tzlocal>=5.2
+requests>=2.31.0
