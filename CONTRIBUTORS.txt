@@ -1,0 +1,12 @@
+Alex Fredrickson https://github.com/alexqfredrickson
+Russ Amos https://github.com/russ-
+Samuel Andersson https://github.com/trew
+Jeremy Butler https://github.com/oddballbutler
+David Cornelius https://github.com/corneldm
+GradyMoran https://github.com/GradyMoran
+maxwasserman https://github.com/maxwasserman
+binury https://github.com/binury
+George Zed https://github.com/ZEDGR
+
+And a very special thanks to everyone (_except for_ Alex Fredrickson) for contributing to the development of pychal
+and pychallonge!
