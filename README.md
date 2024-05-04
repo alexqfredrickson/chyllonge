@@ -1,6 +1,6 @@
 # chyllonge
 
-A Python 3.8+ implementation of [the challonge.com API](https://api.challonge.com/v1).
+A Python 3.9+ implementation of [the challonge.com API](https://api.challonge.com/v1).
 
 ## Prerequisites
 

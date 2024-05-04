@@ -32,6 +32,7 @@ class ChallongeAPITests(unittest.TestCase):
         self.assertIsNotNone(self.api.key)
 
     def test_local_timezone_is_not_null(self):
+        print(datetime.datetime.now(zoneinfo.ZoneInfo('Asia/Jerusalem')).utcoffset())
         self.assertIsNotNone(self.api.local_timezone)
 
     def test_invoke_basic_api_call(self):
