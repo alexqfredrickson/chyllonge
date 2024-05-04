@@ -46,18 +46,6 @@ class ChallongeApi:
                 'ERROR: The local timezone could not be ascertained. This may create issues.'
             )
 
-    @staticmethod
-    def _format_datetime(dt):
-        """
-        The API likes YYYY-MM-DD format.
-
-        :param dt: A datetime.
-        :return: A YYYY-MM-DD string.
-        """
-
-        if dt:
-            return dt.strftime('%Y-%m-%d')
-
     def get_heartbeat(self):
         """
         Invokes the most basic kind of API request.
@@ -143,8 +131,8 @@ class TournamentAPI(ChallongeApi):
 
         :param state: all, pending, in_progress, ended
         :param tournament_type: single_elimination, double_elimination, round_robin, swiss
-        :param created_after: YYYY-MM-DD
-        :param created_before: YYYY-MM-DD
+        :param created_after: A YYYY-MM-DD string.
+        :param created_before: A YYYY-MM-DD string.
         :param subdomain: A Challonge subdomain you've published tournaments to. NOTE: Until v2 of our API, the
                     subdomain parameter is required to retrieve a list of your organization-hosted tournaments.
         """
@@ -155,8 +143,8 @@ class TournamentAPI(ChallongeApi):
         params = {
             "state": state,
             "tournament_type": tournament_type,
-            "created_after": self._format_datetime(created_after),
-            "created_before": self._format_datetime(created_before)
+            "created_after": created_after,
+            "created_before": created_before
         }
 
         response = self.http_get("tournaments.json", params=params)
