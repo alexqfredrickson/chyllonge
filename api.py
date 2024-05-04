@@ -27,7 +27,7 @@ class ChallongeApi:
         self.local_timezone = tzlocal.get_localzone()
 
         # note that the user agent string is required to get around Cloudflare issues
-        self.user_agent_param = {"User-Agent": "chyllonge-temp"}
+        self.user_agent_param = {"User-Agent": "chyllonge"}
 
         self.base_challonge_url = "https://api.challonge.com/v1/"
 
