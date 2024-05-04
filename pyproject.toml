@@ -1,0 +1,27 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "chyllonge"
+version = "0.0.1"
+dependencies = ["tzlocal>=5.2", "requests>=2.31.0"]
+requires-python = ">=3.8"
+authors = [{name = "Alex Fredrickson", email = "alex.q.fredrickson@gmail.com"}]
+maintainers = [{name = "Alex Fredrickson", email = "alex.q.fredrickson@gmail.com"}]
+description = "A Python 3.8+ implementation of the challonge.com API."
+readme = "README.md"
+license = {file = "LICENSE.txt"}
+keywords = ["challonge"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11"
+]
+
+[project.urls]
+Homepage = "https://www.github.com/alexqfredrickson/chyllonge"
+Repository = "https://www.github.com/alexqfredrickson/chyllonge"
+"Bug Tracker" = "https://www.github.com/alexqfredrickson/chyllonge/issues"

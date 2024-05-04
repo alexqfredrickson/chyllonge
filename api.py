@@ -50,6 +50,7 @@ class ChallongeApi:
     def _format_datetime(dt):
         """
         The API likes YYYY-MM-DD format.
+
         :param dt: A datetime.
         :return: A YYYY-MM-DD string.
         """
