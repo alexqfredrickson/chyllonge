@@ -65,7 +65,7 @@ class ChallongeApi:
         response = requests.get(self.base_challonge_url, headers=self.user_agent_param, auth=self.basic_auth_param)
 
         if response.status_code != 200:
-            raise ChallongeAPIException(f"ERROR: {", ".join([e for e in json.loads(response.text)["errors"]])}")
+            raise ChallongeAPIException(f"ERROR: {', '.join([e for e in json.loads(response.text)['errors']])}")
 
         return response.text
 
@@ -78,7 +78,7 @@ class ChallongeApi:
         )
 
         if response.status_code != 200:
-            raise ChallongeAPIException(f"ERROR: {", ".join([e for e in json.loads(response.text)["errors"]])}")
+            raise ChallongeAPIException(f"ERROR: {', '.join([e for e in json.loads(response.text)['errors']])}")
 
         return json.loads(response.text)
 
@@ -95,7 +95,7 @@ class ChallongeApi:
             if response.status_code == 401:
                 raise ChallongeAPIException(
                     f"ERROR: Access was denied - ensure that the local CHALLONGE_USER and CHALLONGE_KEY "
-                    f"environment variables are set - {", ".join([e for e in json.loads(response.text)["errors"]])}"
+                    f"environment variables are set - {', '.join([e for e in json.loads(response.text)['errors']])}"
                 )
 
             else:
@@ -115,7 +115,7 @@ class ChallongeApi:
         )
 
         if response.status_code != 200:
-            raise ChallongeAPIException(f"ERROR: {", ".join([e for e in json.loads(response.text)["errors"]])}")
+            raise ChallongeAPIException(f"ERROR: {', '.join([e for e in json.loads(response.text)['errors']])}")
 
         return json.loads(response.text)
 
@@ -128,7 +128,7 @@ class ChallongeApi:
         )
 
         if response.status_code != 200:
-            raise ChallongeAPIException(f"ERROR: {", ".join([e for e in json.loads(response.text)["errors"]])}")
+            raise ChallongeAPIException(f"ERROR: {', '.join([e for e in json.loads(response.text)['errors']])}")
 
         return json.loads(response.text)
 
