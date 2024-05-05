@@ -14,7 +14,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: |
-          echo $GITHUB_REF
+          $THIS_VERSION = echo $GITHUB_REF | awk -F'/' '{print $3}'
+          sed -i 's/^version\s*=.*/version = $THIS_VERSION/' pyproject.toml
+          cat pyproject.toml
+
 #          date > generated.txt
 #          # Note: the following account information will not work on GHES
 #          git config user.name "github-actions[bot]"
