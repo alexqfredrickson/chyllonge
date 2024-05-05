@@ -1,0 +1,46 @@
+# every time you push a new version tag to main ...
+on:
+  push:
+    tags:
+      - 'v*'
+
+# determine a new version ...
+name: Create Release
+
+jobs:
+  update-pyproject-toml:
+    name: Update pyproject.toml
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          echo $GITHUB_REF
+#          date > generated.txt
+#          # Note: the following account information will not work on GHES
+#          git config user.name "github-actions[bot]"
+#          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+#          git add .
+#          git commit -m "updated pyproject.toml version"
+#          git push
+#
+#  create-release:
+#    name: Create Release
+#    needs: get-next-version
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v2
+#      - name: Create Release
+#        id: create_release
+#        uses: actions/create-release@v1
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # token is provided by GitHub Actions
+#        with:
+#          tag_name: ${{ github.ref }}
+#          release_name: Release ${{ github.ref }}
+#          body: |
+#            Changes in this Release
+#            - First Change
+#            - Second Change
+#          draft: false
+#          prerelease: false
