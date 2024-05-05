@@ -1,6 +1,6 @@
 # chyllonge
 
-A Python 3.9+ implementation of [the challonge.com API](https://api.challonge.com/v1).
+A Python 3.8+ implementation of [the challonge.com API](https://api.challonge.com/v1).
 
 ## Prerequisites
 
@@ -38,7 +38,7 @@ print(tournament["tournament"]["id"])
 
 See `CONTRIBUTORS.txt` for the original authors.
 
-# Testing
+## Testing
 
 To run local tests, run `python -m unittest tests.py`.
 
@@ -47,5 +47,6 @@ afterward, but automated cleanup is not always guaranteed.
 
 ### Non-frequently Asked Questions
 
-_How do you pronounce `chyllonge`_?
-Like "chill-ahnge".
+Q: _How do you pronounce `chyllonge`_?
+
+A: Like "chill-ahnge".
