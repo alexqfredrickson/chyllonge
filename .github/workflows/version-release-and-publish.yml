@@ -23,9 +23,6 @@ jobs:
           NEW_VERSION=${{ github.event.inputs.new-version }}
           OLD_VERSION=$(grep 'version\s\=\s\".*\"' pyproject.toml | grep -o '"[^"]\+"' | sed 's/\"//g')
           
-          echo $NEW_VERSION
-          echo $OLD_VERSION
-          
           if [ "$NEW_VERSION" != "$OLD_VERSION" ]; then
             sed -i "s/^version\s*=.*/version = \"$NEW_VERSION\"/" pyproject.toml
             cat pyproject.toml
@@ -37,7 +34,7 @@ jobs:
             git push
             echo "VERSION=$THIS_VERSION" >> $GITHUB_OUTPUT
           else
-            echo "The current version matches the new version."
+            echo "The current version matches the new version: $NEW_VERSION"
             exit 1
           fi
 
