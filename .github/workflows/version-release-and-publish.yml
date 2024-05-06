@@ -34,7 +34,8 @@ jobs:
             git push
             echo "VERSION=$THIS_VERSION" >> $GITHUB_OUTPUT
           else
-            exit 0
+            echo "The current version matches the new version."
+            exit 1
           fi
 
   create-github-release:
