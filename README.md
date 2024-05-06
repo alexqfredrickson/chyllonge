@@ -29,7 +29,7 @@ from datetime import datetime, timedelta
 
 tournament = tournaments_api.create(
     name="chyllonge-temp",
-    start_at=(datetime.now() + timedelta(hours=1)).isoformat() + "-5:00",
+    start_at=(datetime.now() + timedelta(hours=1)).isoformat() + tournaments_api.tz_utc_offset_string,
     check_in_duration=60
 )
 

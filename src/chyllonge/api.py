@@ -94,7 +94,9 @@ class ChallongeApi:
 
             if response.status_code == 401:
 
-                errors = response.text if "HTTP Basic" in response.text else ', '.join([e for e in json.loads(response.text)['errors']])
+                errors = response.text if "HTTP Basic" in response.text else ', '.join(
+                    [e for e in json.loads(response.text)['errors']]
+                )
 
                 raise ChallongeAPIException(
                     f"ERROR: Access was denied. Ensure that the local CHALLONGE_USER and CHALLONGE_KEY "
