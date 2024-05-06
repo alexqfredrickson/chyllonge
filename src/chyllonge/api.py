@@ -1,6 +1,7 @@
 import os
 import ast
 import json
+import zoneinfo
 from datetime import datetime
 
 from typing import List
@@ -24,31 +25,37 @@ class ChallongeApi:
     def __init__(self):
         self.user = os.environ["CHALLONGE_USER"]
         self.key = os.environ["CHALLONGE_KEY"]
-        self.basic_auth_param = (self.user, self.key)
-        self.local_timezone = tzlocal.get_localzone()
-        self.now = datetime.now(tz=self.local_timezone)
-        self.now_utc_offset = self.now.strftime('%z')
-        self.local_timezone_utc_offset_string = self.now_utc_offset[0:-2] + ":" + self.now_utc_offset[-2:]
-
-        # note that the user agent string is required to get around Cloudflare issues
-        self.user_agent_param = {"User-Agent": "chyllonge"}
-
-        self.base_challonge_url = "https://api.challonge.com/v1/"
 
         if not self.user:
             raise ChallongeAPIException(
                 'ERROR: No API username was defined in the CHALLONGE_USER system environment variable.'
             )
 
-        if not self.user:
+        if not self.key:
             raise ChallongeAPIException(
                 'ERROR: No API key was defined in the CHALLONGE_KEY system environment variable.'
             )
 
-        if not self.local_timezone:
+        self.basic_auth_param = (self.user, self.key)
+
+        if "CHALLONGE_IANA_TZ_NAME" in os.environ:
+            self.timezone = zoneinfo.ZoneInfo(os.environ["CHALLONGE_IANA_TZ_NAME"])
+        else:
+            self.timezone = tzlocal.get_localzone()
+
+        if not self.timezone:
             raise ChallongeAPIException(
                 'ERROR: The local timezone could not be ascertained. This may create issues.'
             )
+
+        self.now = datetime.now(tz=self.timezone)
+        self.tz_utc_offset = self.now.strftime('%z')
+        self.tz_utc_offset_string = self.tz_utc_offset[0:-2] + ":" + self.tz_utc_offset[-2:]
+
+        # note that the user agent string is required to get around Cloudflare issues
+        self.user_agent_param = {"User-Agent": "chyllonge"}
+
+        self.base_challonge_url = "https://api.challonge.com/v1/"
 
     def get_heartbeat(self):
         """
