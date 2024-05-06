@@ -23,7 +23,7 @@ jobs:
       - name: Update pyproject.toml version
         id: update-version
         run: |
-          NEW_VERSION=${{ github.event.inputs.new-version }}"
+          NEW_VERSION=${{ github.event.inputs.new-version }}
           sed -i "s/^version\s*=.*/version = \"$NEW_VERSION\"/" pyproject.toml
           cat pyproject.toml
           git add .
