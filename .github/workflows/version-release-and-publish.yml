@@ -52,8 +52,10 @@ jobs:
       - name: Check out latest HEAD commit
         run: |
           git fetch
-          git log
+          git status
+          git checkout master
           git checkout HEAD^
+          git checkout master
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
