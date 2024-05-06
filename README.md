@@ -40,7 +40,7 @@ See `CONTRIBUTORS.txt` for the original authors.
 
 ## Testing
 
-To run local tests, run `python -m unittest tests.py`.
+To run local tests, run `python -m unittest tests/tests.py`.
 
 Note that the unit tests will create tournaments in your account, called `chyllonge-temp`.  It will try to delete them 
 afterward, but automated cleanup is not always guaranteed.
