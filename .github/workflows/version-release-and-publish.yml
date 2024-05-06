@@ -23,7 +23,7 @@ jobs:
           NEW_VERSION=${{ github.event.inputs.new-version }}
           OLD_VERSION=$(grep -o 'version\s=\s.*' pyproject.toml)
           
-          if [ "$NEW_VERSION" != "$OLD_VERSION ]; then
+          if [ "$NEW_VERSION" != "$OLD_VERSION" ]; then
             sed -i "s/^version\s*=.*/version = \"$NEW_VERSION\"/" pyproject.toml
             cat pyproject.toml
             # uhh https://github.com/marketplace/actions/checkout#Push-a-commit-using-the-built-in-token
