@@ -1,4 +1,9 @@
-on: workflow_dispatch  # this is required to manually run workflows; it is terribly named
+on:
+  workflow_dispatch:  # this is required to manually run workflows; it is terribly named
+    inputs:
+      new-version:
+        description: The new version; e.g. '1.0.0'.
+        required: true
 
 name: Version and Release
 
@@ -6,6 +11,12 @@ jobs:
   version-and-release:
     name: Version and Release
     runs-on: ubuntu-latest
+
+    permissions:
+      # Give the default GITHUB_TOKEN write permission to commit and push the
+      # added or changed files to the repository.
+      contents: write
+
     steps:
       - name: Checkout latest
         uses: actions/checkout@v4
@@ -13,12 +24,11 @@ jobs:
       - name: Update pyproject.toml version
         id: update-version
         run: |
-          THIS_VERSION=$(echo ${{ github.ref_name }} | awk -F'/' '{print $3}')
-          echo $THIS_VERSION
-          sed -i "s/^version\s*=.*/version = \"$THIS_VERSION\"/" pyproject.toml
+          NEW_VERSION=${{ github.event.inputs.new-version }}"
+          sed -i "s/^version\s*=.*/version = \"$NEW_VERSION\"/" pyproject.toml
           cat pyproject.toml
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+#          git config user.name "github-actions[bot]"
+#          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .
           git commit -m "updated pyproject.toml version"
           git push
