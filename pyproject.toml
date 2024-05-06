@@ -27,5 +27,5 @@ Repository = "https://www.github.com/alexqfredrickson/chyllonge"
 "Bug Tracker" = "https://www.github.com/alexqfredrickson/chyllonge/issues"
 
 # https://stackoverflow.com/questions/75312569/error-backend-subprocess-exited-when-trying-to-invoke-get-requires-for-build-sdi
-[tools.setuptools]
-packages = ["src"]
+#[tools.setuptools]
+#packages = ["src"]

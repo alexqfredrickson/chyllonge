@@ -1,0 +1,54 @@
+## every time you push a new version tag to main ...
+#on:
+#  push:
+#    tags:
+#      - 'v*'
+
+# determine a new version ...
+name: Version and Release
+
+jobs:
+  version-and-release:
+    name: Version and Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update pyproject.toml version
+        id: update-version
+        uses: actions/checkout@v4
+        run: |
+          THIS_VERSION=$(echo "refs/head/v0.0.3" | awk -F'/' '{print $3}')
+          echo $THIS_VERSION
+          sed -i "s/^version\s*=.*/version = \"$THIS_VERSION\"/" pyproject.toml
+          cat pyproject.toml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "updated pyproject.toml version"
+          git push
+          echo "VERSION=$THIS_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub release
+        uses: elgohr/Github-Release-Action@v5
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          title: ${{ steps.update-version.outputs.VERSION }}"
+      - name: Deploy to PyPI
+        uses: actions/checkout@v4
+        with:
+          ref: "HEAD^"
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.8'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build
+      - name: Build package
+        run: python -m build
+      - name: Publish package
+        uses: pypa/gh-action-pypi-publish@1.18.14
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
