@@ -46,10 +46,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: version
     steps:
-      - name: Checkout latest since pyproject.toml update
+      - name: Check out repository
         uses: actions/checkout@v4
-        with:
-          ref: "HEAD"
+      - name: Check out latest HEAD commit
+        run: git checkout HEAD^
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
@@ -67,10 +67,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: create-github-release
     steps:
-      - name: Checkout latest since pyproject.toml update
+      - name: Check out repository
         uses: actions/checkout@v4
-        with:
-          ref: "HEAD"
+      - name: Check out latest HEAD commit
+        run: git checkout HEAD^
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
