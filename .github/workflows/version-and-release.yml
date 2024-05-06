@@ -20,7 +20,6 @@ jobs:
     steps:
       - name: Checkout latest
         uses: actions/checkout@v4
-
       - name: Update pyproject.toml version
         id: update-version
         run: |
@@ -33,32 +32,26 @@ jobs:
           git commit -m "updated pyproject.toml version"
           git push
           echo "VERSION=$THIS_VERSION" >> $GITHUB_OUTPUT
-
       - name: Create GitHub release
         uses: elgohr/Github-Release-Action@v5
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           title: ${{ steps.update-version.outputs.VERSION }}"
-
       - name: Checkout latest since pyproject.toml update
         uses: actions/checkout@v4
         with:
           ref: "HEAD^"
-
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
           python-version: '3.x'
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install build
-
       - name: Build package
         run: python -m build
-
       - name: Publish package to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1.8
         with:
