@@ -32,11 +32,11 @@ class ChallongeAPITests(unittest.TestCase):
         self.assertIsNotNone(self.api.key)
 
     def test_local_timezone_is_not_null(self):
-        self.assertIsNotNone(self.api.local_timezone)
+        self.assertIsNotNone(self.api.timezone)
 
     def test_local_timezone_utc_offset_looks_right(self):
         # print(self.api.local_timezone_utc_offset_string)
-        self.assertIsNotNone(self.api.local_timezone_utc_offset_string)
+        self.assertIsNotNone(self.api.tz_utc_offset_string)
 
     def test_invoke_basic_api_call(self):
         response = self.api.get_heartbeat()
@@ -52,7 +52,7 @@ class TournamentAPITests(unittest.TestCase):
         self.matches_api = MatchAPI()
 
         an_hour_from_now = ((datetime.now() + timedelta(hours=1)).isoformat() +
-                            self.tournaments_api.local_timezone_utc_offset_string)
+                            self.tournaments_api.tz_utc_offset_string)
 
         self.tournament = self.tournaments_api.create(
             name="chyllonge-temp",
@@ -187,7 +187,7 @@ class ParticipantsAPITests(unittest.TestCase):
         self.participants_api = ParticipantAPI()
 
         an_hour_from_now = ((datetime.now() + timedelta(hours=1)).isoformat() +
-                            self.tournaments_api.local_timezone_utc_offset_string)
+                            self.tournaments_api.tz_utc_offset_string)
 
         self.tournament = self.tournaments_api.create(
             name="chyllonge-temp",
@@ -338,7 +338,7 @@ class MatchAPITests(unittest.TestCase):
         self.matches_api = MatchAPI()
 
         an_hour_from_now = ((datetime.now() + timedelta(hours=1)).isoformat() +
-                            self.tournaments_api.local_timezone_utc_offset_string)
+                            self.tournaments_api.tz_utc_offset_string)
 
         self.tournament = self.tournaments_api.create(
             name="chyllonge-temp",
@@ -426,7 +426,7 @@ class AttachmentAPITests(unittest.TestCase):
         self.attachments_api = AttachmentAPI()
 
         an_hour_from_now = ((datetime.now() + timedelta(hours=1)).isoformat() +
-                            self.tournaments_api.local_timezone_utc_offset_string)
+                            self.tournaments_api.tz_utc_offset_string)
 
         self.tournament = self.tournaments_api.create(
             name="chyllonge-temp",
