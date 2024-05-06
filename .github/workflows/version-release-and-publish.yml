@@ -21,15 +21,21 @@ jobs:
         id: update-version
         run: |
           NEW_VERSION=${{ github.event.inputs.new-version }}
-          sed -i "s/^version\s*=.*/version = \"$NEW_VERSION\"/" pyproject.toml
-          cat pyproject.toml
-          # uhh https://github.com/marketplace/actions/checkout#Push-a-commit-using-the-built-in-token
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .
-          git commit -m "updated pyproject.toml version"
-          git push
-          echo "VERSION=$THIS_VERSION" >> $GITHUB_OUTPUT
+          OLD_VERSION=$(grep -o 'version\s=\s.*' pyproject.toml)
+          
+          if [ "$NEW_VERSION" != "$OLD_VERSION ]; then
+            sed -i "s/^version\s*=.*/version = \"$NEW_VERSION\"/" pyproject.toml
+            cat pyproject.toml
+            # uhh https://github.com/marketplace/actions/checkout#Push-a-commit-using-the-built-in-token
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add .
+            git commit -m "updated pyproject.toml version"
+            git push
+            echo "VERSION=$THIS_VERSION" >> $GITHUB_OUTPUT
+          else
+            exit 0
+          fi
 
   create-github-release:
     name: Create GitHub Release
