@@ -1,3 +1,5 @@
+on: workflow_dispatch  # this is required to manually run workflows; it is terribly named
+
 name: Version and Release
 
 jobs:
