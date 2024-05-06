@@ -21,7 +21,7 @@ jobs:
         id: update-version
         run: |
           NEW_VERSION=${{ github.event.inputs.new-version }}
-          OLD_VERSION=$(grep -o 'version\s=\s\".*\"' pyproject.toml)
+          OLD_VERSION=$(grep 'version\s\=\s\".*\"' pyproject.toml | grep -o '"[^"]\+"' | sed 's/\"//g')
           
           echo $NEW_VERSION
           echo $OLD_VERSION
