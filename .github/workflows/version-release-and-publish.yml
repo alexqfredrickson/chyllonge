@@ -53,9 +53,9 @@ jobs:
         run: |
           git fetch
           git status
-          git checkout master
-          git checkout HEAD^
-          git checkout master
+          git checkout main
+          git status
+          git log
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
