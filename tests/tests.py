@@ -2,7 +2,7 @@ import random
 import string
 import unittest
 from datetime import datetime, timedelta
-from api import ChallongeApi, TournamentAPI, ParticipantAPI, MatchAPI, AttachmentAPI
+from src.chyllonge.api import ChallongeApi, TournamentAPI, ParticipantAPI, MatchAPI, AttachmentAPI
 
 
 def delete_all_tournaments():
