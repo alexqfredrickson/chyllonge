@@ -45,10 +45,8 @@ jobs:
     permissions:
       contents: read
     steps:
-#      - name: Check out repository
-#        uses: actions/checkout@v4
-      - name: run ls
-        run: ls -la
+      - name: Check out repository
+        uses: actions/checkout@v4
       - name: Check out latest HEAD commit
         run: git checkout HEAD^
       - name: Create GitHub Release
@@ -70,8 +68,8 @@ jobs:
     permissions:
       contents: read
     steps:
-#      - name: Check out repository
-#        uses: actions/checkout@v4
+      - name: Check out repository
+        uses: actions/checkout@v4
       - name: Check out latest HEAD commit
         run: git checkout HEAD^
       - name: Set up Python
