@@ -22,40 +22,35 @@ To install `chyllonge`, execute `pip install chyllonge`.
 Detailed API documentation is available at https://api.challonge.com/v1.
 
 ```python
-from chyllonge.api import TournamentAPI, ParticipantAPI, MatchAPI, AttachmentAPI
+from chyllonge.api import ChallongeAPI
 from datetime import datetime, timedelta
 
-# instantiate base api classes
-tournaments_api = TournamentAPI()
-participants_api = ParticipantAPI()
-match_api = MatchAPI()
-attachment_api = AttachmentAPI()
+api = ChallongeAPI()
 
 # create a basic tournament
-tournament = tournaments_api.create(name="My Chyllonge Tournament")
+tournament = api.tournaments.create(name="My Chyllonge Tournament")
 print(tournament["tournament"]["id"])
 
 # create a tournament that starts in an hour
-an_hour_from_now = (datetime.now() + timedelta(hours=1)).isoformat() + tournaments_api.tz_utc_offset_string
-tournament = tournaments_api.create(name="My Chyllonge Tournament", start_at=an_hour_from_now, check_in_duration=60)
+an_hour_from_now = (datetime.now() + timedelta(hours=1)).isoformat() + api.http.tz_utc_offset_string
+tournament = api.tournaments.create(name="My Chyllonge Tournament", start_at=an_hour_from_now, check_in_duration=60)
 print(tournament["tournament"]["id"])
 
 # create a tournament, add Alice and Bob, process their check-ins, start the tournment, set their match underway,
 # score their match (congratulations Alice!), finalize the tournament
-an_hour_from_now = (datetime.now() + timedelta(hours=1)).isoformat() + tournaments_api.tz_utc_offset_string
-tournament = tournaments_api.create(name="Alice and Bob Play Bingo", start_at=an_hour_from_now, check_in_duration=60)
+an_hour_from_now = (datetime.now() + timedelta(hours=1)).isoformat() + api.http.tz_utc_offset_string
+tournament = api.tournaments.create(name="Alice and Bob Play Bingo", start_at=an_hour_from_now, check_in_duration=60)
 tournament_id = tournament["tournament"]["id"]
-
-participants_api.add(tournament_id, name="Alice")
-participants_api.add(tournament_id, name="Bob")
-tournaments_api.process_checkins(tournament_id)
-tournaments_api.start(tournament_id)
-match_id = match_api.get_all(tournament_id=tournament_id)[0]["match"]["id"]
-alice_id = participants_api.get_all(tournament_id)[0]["participant"]["id"]
-match_api.set_underway(tournament_id, match_id)
-match_api.update(tournament_id, match_id, match_scores_csv="3-1,2-2", match_winner_id=alice_id)
-tournaments_api.finalize(tournament_id)
-finished_tournment = tournaments_api.get(tournament_id)
+api.participants.add(tournament_id, name="Alice")
+api.participants.add(tournament_id, name="Bob")
+api.tournaments.process_checkins(tournament_id)
+api.tournaments.start(tournament_id)
+match_id = api.matches.get_all(tournament_id=tournament_id)[0]["match"]["id"]
+alice_id = api.participants.get_all(tournament_id)[0]["participant"]["id"]
+api.matches.set_underway(tournament_id, match_id)
+api.matches.update(tournament_id, match_id, match_scores_csv="3-1,2-2", match_winner_id=alice_id)
+api.tournaments.finalize(tournament_id)
+finished_tournment = api.tournaments.get(tournament_id)
 ```
 
 ## History

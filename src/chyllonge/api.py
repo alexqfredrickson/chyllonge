@@ -23,6 +23,33 @@ class ChallongeAPINotImplementedException(Exception):
 class ChallongeApi:
 
     def __init__(self):
+        self.http = ChallongeApiHttpMethods()
+
+        self.tournaments = TournamentAPI(self.http)
+        self.matches = MatchAPI(self.http)
+        self.participants = ParticipantAPI(self.http)
+        self.attachments = AttachmentAPI(self.http)
+
+    def get_heartbeat(self):
+        """
+        Invokes the most basic kind of API request.
+        """
+
+        response = requests.get(
+            self.http.base_challonge_url,
+            headers=self.http.user_agent_param,
+            auth=self.http.basic_auth_param
+        )
+
+        if response.status_code != 200:
+            raise ChallongeAPIException(f"ERROR: {', '.join([e for e in json.loads(response.text)['errors']])}")
+
+        return response.text
+
+
+class ChallongeApiHttpMethods:
+
+    def __init__(self):
         self.user = os.environ["CHALLONGE_USER"]
         self.key = os.environ["CHALLONGE_KEY"]
 
@@ -57,19 +84,7 @@ class ChallongeApi:
 
         self.base_challonge_url = "https://api.challonge.com/v1/"
 
-    def get_heartbeat(self):
-        """
-        Invokes the most basic kind of API request.
-        """
-
-        response = requests.get(self.base_challonge_url, headers=self.user_agent_param, auth=self.basic_auth_param)
-
-        if response.status_code != 200:
-            raise ChallongeAPIException(f"ERROR: {', '.join([e for e in json.loads(response.text)['errors']])}")
-
-        return response.text
-
-    def http_get(self, api_suffix='', params=None):
+    def get(self, api_suffix='', params=None):
         response = requests.get(
             self.base_challonge_url + api_suffix,
             headers=self.user_agent_param,
@@ -82,7 +97,7 @@ class ChallongeApi:
 
         return json.loads(response.text)
 
-    def http_post(self, api_suffix, params=None):
+    def post(self, api_suffix, params=None):
         response = requests.post(
             self.base_challonge_url + api_suffix,
             headers=self.user_agent_param,
@@ -112,7 +127,7 @@ class ChallongeApi:
 
         return json.loads(response.text)
 
-    def http_put(self, api_suffix, params=None):
+    def put(self, api_suffix, params=None):
         response = requests.put(
             self.base_challonge_url + api_suffix,
             headers=self.user_agent_param,
@@ -125,7 +140,7 @@ class ChallongeApi:
 
         return json.loads(response.text)
 
-    def http_delete(self, api_suffix, params=None):
+    def delete(self, api_suffix, params=None):
         response = requests.delete(
             self.base_challonge_url + api_suffix,
             headers=self.user_agent_param,
@@ -139,7 +154,11 @@ class ChallongeApi:
         return json.loads(response.text)
 
 
-class TournamentAPI(ChallongeApi):
+class TournamentAPI:
+
+    def __init__(self, http_methods):
+        self.http = http_methods
+        self.participant_api = ParticipantAPI(self.http)  # special case for a built-in sanity check
 
     def get_all(self, state: str = None, tournament_type: str = None, created_after: str = None,
                 created_before: str = None, subdomain=None):
@@ -164,7 +183,7 @@ class TournamentAPI(ChallongeApi):
             "created_before": created_before
         }
 
-        response = self.http_get("tournaments.json", params=params)
+        response = self.http.get("tournaments.json", params=params)
         return response
 
     def create(self, name: str = None, tournament_type: str = None, url: str = None, subdomain: str = None,
@@ -267,7 +286,7 @@ class TournamentAPI(ChallongeApi):
             "tournament[prediction_method]": prediction_method,
         }
 
-        response = self.http_post("tournaments.json", params)
+        response = self.http.post("tournaments.json", params)
         return response
 
     def get(self, tournament_id: str, include_participants: int = None, include_matches: int = None):
@@ -289,7 +308,7 @@ class TournamentAPI(ChallongeApi):
             "include_matches": include_matches
         }
 
-        response = self.http_get(f"tournaments/{tournament_id}.json", params=params)
+        response = self.http.get(f"tournaments/{tournament_id}.json", params=params)
         return response
 
     def update(self, tournament_id: str, name: str = None, tournament_type: str = None,
@@ -394,7 +413,7 @@ class TournamentAPI(ChallongeApi):
             "tournament[prediction_method]": prediction_method,
         }
 
-        response = self.http_put(f"tournaments/{tournament_id}.json", params=params)
+        response = self.http.put(f"tournaments/{tournament_id}.json", params=params)
         return response
 
     def delete(self, tournament_id: str):
@@ -404,7 +423,7 @@ class TournamentAPI(ChallongeApi):
         :param tournament_id: A tournament ID.
         """
 
-        response = self.http_delete(f"tournaments/{tournament_id}.json")
+        response = self.http.delete(f"tournaments/{tournament_id}.json")
         return response
 
     def process_checkins(self, tournament_id: str, include_participants: int = None,
@@ -430,7 +449,7 @@ class TournamentAPI(ChallongeApi):
             "include_matches": include_matches
         }
 
-        response = self.http_post(f"tournaments/{tournament_id}/process_check_ins.json", params)
+        response = self.http.post(f"tournaments/{tournament_id}/process_check_ins.json", params)
         return response
 
     def abort_checkins(self, tournament_id: str, include_participants: int = None, include_matches: int = None):
@@ -454,7 +473,7 @@ class TournamentAPI(ChallongeApi):
             "include_matches": include_matches
         }
 
-        response = self.http_post(f"tournaments/{tournament_id}/abort_check_in.json", params)
+        response = self.http.post(f"tournaments/{tournament_id}/abort_check_in.json", params)
         return response
 
     def start(self, tournament_id: str, include_participants: int = None, include_matches: int = None):
@@ -469,19 +488,17 @@ class TournamentAPI(ChallongeApi):
         :param include_matches: 0 or 1; includes an array of associated match records
         """
 
-        participant_api = ParticipantAPI()
-
         params = {
             "include_participants": include_participants,
             "include_matches": include_matches
         }
 
-        participants = participant_api.get_all(tournament_id)
+        participants = self.participant_api.get_all(tournament_id)
 
         if len(participants) <= 1:
             raise ChallongeAPIException("ERROR: A tournament needs at least two participants in order to start.")
         else:
-            response = self.http_post(f"tournaments/{tournament_id}/start.json", params)
+            response = self.http.post(f"tournaments/{tournament_id}/start.json", params)
             return response
 
     def finalize(self, tournament_id: str, include_participants: int = None, include_matches: int = None):
@@ -500,7 +517,7 @@ class TournamentAPI(ChallongeApi):
             "include_matches": include_matches
         }
 
-        response = self.http_post(f"tournaments/{tournament_id}/finalize.json", params)
+        response = self.http.post(f"tournaments/{tournament_id}/finalize.json", params)
         return response
 
     def reset(self, tournament_id: str, include_participants: int = None, include_matches: int = None):
@@ -520,7 +537,7 @@ class TournamentAPI(ChallongeApi):
             "include_matches": include_matches
         }
 
-        response = self.http_post(f"tournaments/{tournament_id}/reset.json", params)
+        response = self.http.post(f"tournaments/{tournament_id}/reset.json", params)
         return response
 
     def open_for_predictions(self, tournament_id: str, include_participants: int = None,
@@ -544,18 +561,21 @@ class TournamentAPI(ChallongeApi):
             "include_matches": include_matches
         }
 
-        response = self.http_post(f"tournaments/{tournament_id}/open_for_predictions.json", params)
+        response = self.http.post(f"tournaments/{tournament_id}/open_for_predictions.json", params)
         return response
 
 
-class ParticipantAPI(ChallongeApi):
+class ParticipantAPI:
+
+    def __init__(self, http_methods):
+        self.http = http_methods
 
     def get_all(self, tournament_id: str):
         """
         Retrieve a tournament's participant list.
         """
 
-        response = self.http_get(f"tournaments/{tournament_id}/participants.json")
+        response = self.http.get(f"tournaments/{tournament_id}/participants.json")
         return response
 
     def add(self, tournament_id: str, name: str = None, challonge_username: str = None, email: str = None,
@@ -572,7 +592,7 @@ class ParticipantAPI(ChallongeApi):
             "participant[misc]": misc,
         }
 
-        response = self.http_post(f"tournaments/{tournament_id}/participants.json", params)
+        response = self.http.post(f"tournaments/{tournament_id}/participants.json", params)
         return response
 
     def add_multiple(self, tournament_id: str, names: List[str] = None,
@@ -594,7 +614,7 @@ class ParticipantAPI(ChallongeApi):
             "participants[][misc]": miscs,
         }
 
-        response = self.http_post(f"tournaments/{tournament_id}/participants/bulk_add.json", params)
+        response = self.http.post(f"tournaments/{tournament_id}/participants/bulk_add.json", params)
         return response
 
     def get(self, tournament_id: str, participant_id: int = None, include_matches: bool = False):
@@ -604,7 +624,7 @@ class ParticipantAPI(ChallongeApi):
 
         params = {"include_matches": include_matches}
 
-        response = self.http_get(f"tournaments/{tournament_id}/participants/{participant_id}.json", params)
+        response = self.http.get(f"tournaments/{tournament_id}/participants/{participant_id}.json", params)
         return response
 
     def update(self, tournament_id: str, participant_id: str, participant_name: str = None,
@@ -622,7 +642,7 @@ class ParticipantAPI(ChallongeApi):
             "participant[misc]": misc,
         }
 
-        response = self.http_put(f"tournaments/{tournament_id}/participants/{participant_id}.json", params)
+        response = self.http.put(f"tournaments/{tournament_id}/participants/{participant_id}.json", params)
         return response
 
     def check_in(self, tournament_id: str, participant_id: str):
@@ -630,7 +650,7 @@ class ParticipantAPI(ChallongeApi):
         Checks a participant in, setting checked_in_at to the current time.
         """
 
-        response = self.http_post(f"tournaments/{tournament_id}/participants/{participant_id}/check_in.json")
+        response = self.http.post(f"tournaments/{tournament_id}/participants/{participant_id}/check_in.json")
         return response
 
     def check_out(self, tournament_id: str, participant_id: str):
@@ -638,7 +658,7 @@ class ParticipantAPI(ChallongeApi):
         Marks a participant as having not checked in, setting checked_in_at to nil - also called 'undo_check_in'.
         """
 
-        response = self.http_post(f"tournaments/{tournament_id}/participants/{participant_id}/undo_check_in.json")
+        response = self.http.post(f"tournaments/{tournament_id}/participants/{participant_id}/undo_check_in.json")
         return response
 
     def remove(self, tournament_id: str, participant_id: str):
@@ -648,7 +668,7 @@ class ParticipantAPI(ChallongeApi):
         remaining matches.
         """
 
-        response = self.http_delete(f"tournaments/{tournament_id}/participants/{participant_id}.json")
+        response = self.http.delete(f"tournaments/{tournament_id}/participants/{participant_id}.json")
         return response
 
     def remove_all(self, tournament_id: str):
@@ -656,7 +676,7 @@ class ParticipantAPI(ChallongeApi):
         Deletes all participants in a tournament. (Only allowed if tournament hasn't started yet)
         """
 
-        response = self.http_delete(f"tournaments/{tournament_id}/participants/clear.json")
+        response = self.http.delete(f"tournaments/{tournament_id}/participants/clear.json")
         return response
 
     def randomize(self, tournament_id: str):
@@ -664,18 +684,21 @@ class ParticipantAPI(ChallongeApi):
         Randomize seeds among participants. Only applicable before a tournament has started.
         """
 
-        response = self.http_post(f"tournaments/{tournament_id}/participants/randomize.json")
+        response = self.http.post(f"tournaments/{tournament_id}/participants/randomize.json")
         return response
 
 
-class AttachmentAPI(ChallongeApi):
+class AttachmentAPI:
+
+    def __init__(self, http_methods):
+        self.http = http_methods
 
     def get_all(self, tournament_id: str, match_id: str = None):
         """
         Retrieve a set of attachments created for a specific match.
         """
 
-        response = self.http_get(f"tournaments/{tournament_id}/matches/{match_id}/attachments.json")
+        response = self.http.get(f"tournaments/{tournament_id}/matches/{match_id}/attachments.json")
         return response
 
     def create(self, tournament_id: str, match_id: str = None, match_attachment_asset: str = None,
@@ -698,7 +721,7 @@ class AttachmentAPI(ChallongeApi):
             "match_attachment[description]": match_attachment_description
         }
 
-        response = self.http_post(f"tournaments/{tournament_id}/matches/{match_id}/attachments.json", params)
+        response = self.http.post(f"tournaments/{tournament_id}/matches/{match_id}/attachments.json", params)
         return response
 
     def get(self, tournament_id: str, match_id: str = None, attachment_id: str = None):
@@ -706,7 +729,7 @@ class AttachmentAPI(ChallongeApi):
         Retrieve a single match attachment record.
         """
 
-        response = self.http_get(f"tournaments/{tournament_id}/matches/{match_id}/attachments/{attachment_id}.json")
+        response = self.http.get(f"tournaments/{tournament_id}/matches/{match_id}/attachments/{attachment_id}.json")
         return response
 
     def update(self, tournament_id: str, match_id: str = None, attachment_id: str = None,
@@ -732,7 +755,7 @@ class AttachmentAPI(ChallongeApi):
             "match_attachment[description]": match_attachment_description
         }
 
-        response = self.http_put(
+        response = self.http.put(
             f"tournaments/{tournament_id}/matches/{match_id}/attachments/{attachment_id}.json", params
         )
         return response
@@ -742,11 +765,14 @@ class AttachmentAPI(ChallongeApi):
         Delete a match attachment.
         """
 
-        response = self.http_delete(f"tournaments/{tournament_id}/matches/{match_id}/attachments/{attachment_id}.json")
+        response = self.http.delete(f"tournaments/{tournament_id}/matches/{match_id}/attachments/{attachment_id}.json")
         return response
 
 
-class MatchAPI(ChallongeApi):
+class MatchAPI:
+
+    def __init__(self, http_methods):
+        self.http = http_methods
 
     def get_all(self, tournament_id: str, state: str = None, participant_id: str = None):
         """
@@ -754,7 +780,7 @@ class MatchAPI(ChallongeApi):
         """
 
         params = {"state": state, "participant_id": participant_id}
-        response = self.http_get(f"tournaments/{tournament_id}/matches.json", params)
+        response = self.http.get(f"tournaments/{tournament_id}/matches.json", params)
         return response
 
     def get(self, tournament_id: str, match_id: str = None, include_attachments: int = 0):
@@ -763,7 +789,7 @@ class MatchAPI(ChallongeApi):
         """
 
         params = {"include_attachments": include_attachments}
-        response = self.http_get(f"tournaments/{tournament_id}/matches/{match_id}.json", params)
+        response = self.http.get(f"tournaments/{tournament_id}/matches/{match_id}.json", params)
         return response
 
     def update(self, tournament_id: str, match_id: str = None, match_scores_csv: str = None,
@@ -789,7 +815,7 @@ class MatchAPI(ChallongeApi):
             "match[player2_votes]": match_player2_votes
         }
 
-        response = self.http_put(f"tournaments/{tournament_id}/matches/{match_id}.json", params)
+        response = self.http.put(f"tournaments/{tournament_id}/matches/{match_id}.json", params)
         return response
 
     def reopen(self, tournament_id: str, match_id: str = None):
@@ -797,7 +823,7 @@ class MatchAPI(ChallongeApi):
         Reopens a match that was marked completed, automatically resetting matches that follow it.
         """
 
-        response = self.http_post(f"tournaments/{tournament_id}/matches/{match_id}/reopen.json")
+        response = self.http.post(f"tournaments/{tournament_id}/matches/{match_id}/reopen.json")
         return response
 
     def set_underway(self, tournament_id: str, match_id: str = None):
@@ -805,7 +831,7 @@ class MatchAPI(ChallongeApi):
         Sets "underway_at" to the current time and highlights the match in the bracket
         """
 
-        response = self.http_post(f"tournaments/{tournament_id}/matches/{match_id}/mark_as_underway.json")
+        response = self.http.post(f"tournaments/{tournament_id}/matches/{match_id}/mark_as_underway.json")
         return response
 
     def unset_underway(self, tournament_id: str, match_id: str = None):
@@ -813,5 +839,5 @@ class MatchAPI(ChallongeApi):
         Clears "underway_at" and unhighlights the match in the bracket
         """
 
-        response = self.http_post(f"tournaments/{tournament_id}/matches/{match_id}/unmark_as_underway.json")
+        response = self.http.post(f"tournaments/{tournament_id}/matches/{match_id}/unmark_as_underway.json")
         return response

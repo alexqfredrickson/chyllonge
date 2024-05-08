@@ -2,7 +2,7 @@ import random
 import string
 import unittest
 from datetime import datetime, timedelta
-from src.chyllonge.api import ChallongeApi, TournamentAPI, ParticipantAPI, MatchAPI, AttachmentAPI
+from src.chyllonge.api import ChallongeApi, ChallongeApiHttpMethods
 
 
 def delete_all_tournaments():
@@ -10,13 +10,13 @@ def delete_all_tournaments():
     Deletes all tournaments associated with your account.
     """
 
-    tournaments = TournamentAPI()
+    api = ChallongeApi()
 
-    all_tournaments = tournaments.get_all()
+    all_tournaments = api.tournaments.get_all()
     all_tournament_ids = [t["tournament"]["id"] for t in all_tournaments]
 
     for tid in all_tournament_ids:
-        tournaments.delete(tournament_id=tid)
+        api.tournaments.delete(tournament_id=tid)
 
 
 # @unittest.skip
@@ -25,36 +25,39 @@ class ChallongeAPITests(unittest.TestCase):
     def setUp(self):
         self.api = ChallongeApi()
 
-    def test_api_user_is_not_null(self):
-        self.assertIsNotNone(self.api.user)
-
-    def test_api_key_is_not_null(self):
-        self.assertIsNotNone(self.api.key)
-
-    def test_local_timezone_is_not_null(self):
-        self.assertIsNotNone(self.api.timezone)
-
-    def test_local_timezone_utc_offset_looks_right(self):
-        print(self.api.tz_utc_offset_string)
-        self.assertIsNotNone(self.api.tz_utc_offset_string)
-
-    def test_invoke_basic_api_call(self):
+    def test_heartbeat(self):
         response = self.api.get_heartbeat()
         self.assertIsNotNone(response)
+
+
+class ChallongeAPIHttpMethodTests(unittest.TestCase):
+
+    def setUp(self):
+        self.http = ChallongeApiHttpMethods()
+
+    def test_api_user_is_not_null(self):
+        self.assertIsNotNone(self.http.user)
+
+    def test_api_key_is_not_null(self):
+        self.assertIsNotNone(self.http.key)
+
+    def test_local_timezone_is_not_null(self):
+        self.assertIsNotNone(self.http.timezone)
+
+    def test_local_timezone_utc_offset_looks_right(self):
+        print(self.http.tz_utc_offset_string)
+        self.assertIsNotNone(self.http.tz_utc_offset_string)
 
 
 # @unittest.skip
 class TournamentAPITests(unittest.TestCase):
 
     def setUp(self):
-        self.tournaments_api = TournamentAPI()
-        self.participants_api = ParticipantAPI()
-        self.matches_api = MatchAPI()
+        self.api = ChallongeApi()
 
-        an_hour_from_now = ((datetime.now() + timedelta(hours=1)).isoformat() +
-                            self.tournaments_api.tz_utc_offset_string)
+        an_hour_from_now = ((datetime.now() + timedelta(hours=1)).isoformat() + self.api.http.tz_utc_offset_string)
 
-        self.tournament = self.tournaments_api.create(
+        self.tournament = self.api.tournaments.create(
             name="chyllonge-temp",
             start_at=an_hour_from_now,
             check_in_duration=60
@@ -67,7 +70,7 @@ class TournamentAPITests(unittest.TestCase):
         delete_all_tournaments()
 
     def test_get_all_tournaments(self):
-        all_tournaments = self.tournaments_api.get_all()
+        all_tournaments = self.api.tournaments.get_all()
 
         return self.assertIsNotNone(all_tournaments[0]["tournament"]["id"])
 
@@ -75,93 +78,93 @@ class TournamentAPITests(unittest.TestCase):
         return self.assertTrue(self.tournament["tournament"]["name"] == "chyllonge-temp")
 
     def test_get_tournament(self):
-        t2 = self.tournaments_api.get(self.tournament["tournament"]["id"])
+        t2 = self.api.tournaments.get(self.tournament["tournament"]["id"])
 
         return self.assertIsNotNone(t2["tournament"]["id"])
 
     def test_update_tournament(self):
-        new_t = self.tournaments_api.update(tournament_id=self.tournament_id, name="test2!")
+        new_t = self.api.tournaments.update(tournament_id=self.tournament_id, name="test2!")
         new_t_name = new_t["tournament"]["name"]
 
         return self.assertTrue(new_t_name != self.tournament_name)
 
     def test_delete_tournament(self):
-        self.tournaments_api.delete(self.tournament_id)
-        ts = self.tournaments_api.get_all()
+        self.api.tournaments.delete(self.tournament_id)
+        ts = self.api.tournaments.get_all()
 
         return self.assertTrue(len(ts) == 0)
 
     def test_process_tournament_checkins(self):
-        alice = self.participants_api.add(self.tournament_id, name="Alice")
-        self.participants_api.check_in(self.tournament_id, alice["participant"]["id"])
-        t = self.tournaments_api.process_checkins(self.tournament_id)
+        alice = self.api.participants.add(self.tournament_id, name="Alice")
+        self.api.participants.check_in(self.tournament_id, alice["participant"]["id"])
+        t = self.api.tournaments.process_checkins(self.tournament_id)
 
         return self.assertTrue(t["tournament"]["state"] == "checked_in")
 
     def test_abort_tournament_checkins(self):
-        alice = self.participants_api.add(self.tournament_id, name="Alice")
-        self.participants_api.check_in(self.tournament_id, alice["participant"]["id"])
-        self.tournaments_api.process_checkins(self.tournament_id)
-        t = self.tournaments_api.abort_checkins(self.tournament_id)
+        alice = self.api.participants.add(self.tournament_id, name="Alice")
+        self.api.participants.check_in(self.tournament_id, alice["participant"]["id"])
+        self.api.tournaments.process_checkins(self.tournament_id)
+        t = self.api.tournaments.abort_checkins(self.tournament_id)
 
         return self.assertTrue(t["tournament"]["state"] == "pending")
 
     def test_start_tournament(self):
-        self.participants_api.add(self.tournament_id, name="Alice")
-        self.participants_api.add(self.tournament_id, name="Bob")
-        self.tournaments_api.process_checkins(self.tournament_id)
-        self.tournaments_api.start(self.tournament_id)
+        self.api.participants.add(self.tournament_id, name="Alice")
+        self.api.participants.add(self.tournament_id, name="Bob")
+        self.api.tournaments.process_checkins(self.tournament_id)
+        self.api.tournaments.start(self.tournament_id)
 
-        t = self.tournaments_api.get(self.tournament_id)
+        t = self.api.tournaments.get(self.tournament_id)
 
         return self.assertIsNotNone(t["tournament"]["state"] == "underway")
 
     def test_finalize_tournament(self):
-        self.participants_api.add(self.tournament_id, name="Alice")
-        self.participants_api.add(self.tournament_id, name="Bob")
-        self.tournaments_api.process_checkins(self.tournament_id)
-        self.tournaments_api.start(self.tournament_id)
+        self.api.participants.add(self.tournament_id, name="Alice")
+        self.api.participants.add(self.tournament_id, name="Bob")
+        self.api.tournaments.process_checkins(self.tournament_id)
+        self.api.tournaments.start(self.tournament_id)
 
-        match_id = self.matches_api.get_all(tournament_id=self.tournament_id)[0]["match"]["id"]
-        alice_id = self.participants_api.get_all(self.tournament_id)[0]["participant"]["id"]
+        match_id = self.api.matches.get_all(tournament_id=self.tournament_id)[0]["match"]["id"]
+        alice_id = self.api.participants.get_all(self.tournament_id)[0]["participant"]["id"]
 
-        self.matches_api.set_underway(self.tournament_id, match_id)
-        self.matches_api.update(self.tournament_id, match_id, match_scores_csv="3-1,2-2", match_winner_id=alice_id)
-        self.tournaments_api.finalize(self.tournament_id)
+        self.api.matches.set_underway(self.tournament_id, match_id)
+        self.api.matches.update(self.tournament_id, match_id, match_scores_csv="3-1,2-2", match_winner_id=alice_id)
+        self.api.tournaments.finalize(self.tournament_id)
 
-        t = self.tournaments_api.get(self.tournament_id)
+        t = self.api.tournaments.get(self.tournament_id)
 
         return self.assertTrue(t["tournament"]["state"] == "complete")
 
     def test_reset_tournament(self):
-        self.participants_api.add(self.tournament_id, name="Alice")
-        self.participants_api.add(self.tournament_id, name="Bob")
-        self.tournaments_api.process_checkins(self.tournament_id)
-        self.tournaments_api.start(self.tournament_id)
+        self.api.participants.add(self.tournament_id, name="Alice")
+        self.api.participants.add(self.tournament_id, name="Bob")
+        self.api.tournaments.process_checkins(self.tournament_id)
+        self.api.tournaments.start(self.tournament_id)
 
-        match_id = self.matches_api.get_all(tournament_id=self.tournament_id)[0]["match"]["id"]
-        alice_id = self.participants_api.get_all(self.tournament_id)[0]["participant"]["id"]
+        match_id = self.api.matches.get_all(tournament_id=self.tournament_id)[0]["match"]["id"]
+        alice_id = self.api.participants.get_all(self.tournament_id)[0]["participant"]["id"]
 
-        self.matches_api.set_underway(self.tournament_id, match_id)
-        self.matches_api.update(self.tournament_id, match_id, match_scores_csv="3-1,2-2", match_winner_id=alice_id)
+        self.api.matches.set_underway(self.tournament_id, match_id)
+        self.api.matches.update(self.tournament_id, match_id, match_scores_csv="3-1,2-2", match_winner_id=alice_id)
 
-        self.tournaments_api.reset(self.tournament_id)
+        self.api.tournaments.reset(self.tournament_id)
 
-        updated_matches = self.matches_api.get_all(self.tournament_id)
+        updated_matches = self.api.matches.get_all(self.tournament_id)
 
         return self.assertTrue(len(updated_matches) == 0)
 
     def test_open_tournament_for_predictions(self):
 
         # overwrite tourney
-        self.tournament = self.tournaments_api.create(name="chyllonge-temp", prediction_method=1)
+        self.tournament = self.api.tournaments.create(name="chyllonge-temp", prediction_method=1)
         self.tournament_id = self.tournament["tournament"]["id"]
         self.tournament_name = self.tournament["tournament"]["name"]
 
-        self.participants_api.add(self.tournament_id, name="Alice")
-        self.participants_api.add(self.tournament_id, name="Bob")
+        self.api.participants.add(self.tournament_id, name="Alice")
+        self.api.participants.add(self.tournament_id, name="Bob")
 
-        r = self.tournaments_api.open_for_predictions(self.tournament_id)
+        r = self.api.tournaments.open_for_predictions(self.tournament_id)
 
         return self.assertTrue(r["tournament"]["state"] == "accepting_predictions")
 
@@ -183,13 +186,12 @@ class ParticipantsAPITests(unittest.TestCase):
         return mock_email_addresses
 
     def setUp(self):
-        self.tournaments_api = TournamentAPI()
-        self.participants_api = ParticipantAPI()
+        self.api = ChallongeApi()
 
         an_hour_from_now = ((datetime.now() + timedelta(hours=1)).isoformat() +
-                            self.tournaments_api.tz_utc_offset_string)
+                            self.api.http.tz_utc_offset_string)
 
-        self.tournament = self.tournaments_api.create(
+        self.tournament = self.api.tournaments.create(
             name="chyllonge-temp",
             start_at=an_hour_from_now,
             check_in_duration=60
@@ -206,8 +208,8 @@ class ParticipantsAPITests(unittest.TestCase):
         Retrieve a tournament's participant list.
         """
 
-        self.participants_api.add(self.tournament_id, name="Alice")
-        self.tournament_participants = self.participants_api.get_all(self.tournament_id)
+        self.api.participants.add(self.tournament_id, name="Alice")
+        self.tournament_participants = self.api.participants.get_all(self.tournament_id)
 
         self.assertTrue(len(self.tournament_participants) == 1)
 
@@ -216,9 +218,9 @@ class ParticipantsAPITests(unittest.TestCase):
         Add a participant to a tournament (up until it is started).
         """
 
-        self.participants_api.add(self.tournament_id, name="Alice")
-        self.participants_api.add(self.tournament_id, name="Bob")
-        self.tournament_participants = self.participants_api.get_all(self.tournament_id)
+        self.api.participants.add(self.tournament_id, name="Alice")
+        self.api.participants.add(self.tournament_id, name="Bob")
+        self.tournament_participants = self.api.participants.get_all(self.tournament_id)
 
         self.assertTrue(len(self.tournament_participants) >= 2)
 
@@ -229,13 +231,13 @@ class ParticipantsAPITests(unittest.TestCase):
         be rolled back.
         """
 
-        self.participants_api.add_multiple(
+        self.api.participants.add_multiple(
             tournament_id=self.tournament_id,
             names=["Alice", "Bob", "Charlie"],
             challonge_usernames_or_emails=self._generate_mock_email_addresses(3)
         )
 
-        self.tournament_participants = self.participants_api.get_all(self.tournament_id)
+        self.tournament_participants = self.api.participants.get_all(self.tournament_id)
 
         self.assertTrue(len(self.tournament_participants) == 5)
 
@@ -244,7 +246,7 @@ class ParticipantsAPITests(unittest.TestCase):
         Retrieve a single participant record for a tournament.
         """
 
-        p = self.participants_api.add(self.tournament_id, name="Alice")
+        p = self.api.participants.add(self.tournament_id, name="Alice")
 
         self.assertIsNotNone(p["participant"]["id"])
 
@@ -253,8 +255,8 @@ class ParticipantsAPITests(unittest.TestCase):
         Update the attributes of a tournament participant.
         """
 
-        p = self.participants_api.add(self.tournament_id, name="Alice")
-        p2 = self.participants_api.update(self.tournament_id, p["participant"]["id"], "Allison")
+        p = self.api.participants.add(self.tournament_id, name="Alice")
+        p2 = self.api.participants.update(self.tournament_id, p["participant"]["id"], "Allison")
 
         self.assertTrue(p["participant"]["name"] != p2["participant"]["name"])
 
@@ -263,9 +265,9 @@ class ParticipantsAPITests(unittest.TestCase):
         Checks a participant in, setting checked_in_at to the current time.
         """
 
-        alice = self.participants_api.add(self.tournament_id, name="Alice")
-        self.participants_api.check_in(self.tournament_id, alice["participant"]["id"])
-        alice = self.participants_api.get(self.tournament_id, alice["participant"]["id"])
+        alice = self.api.participants.add(self.tournament_id, name="Alice")
+        self.api.participants.check_in(self.tournament_id, alice["participant"]["id"])
+        alice = self.api.participants.get(self.tournament_id, alice["participant"]["id"])
 
         self.assertTrue(alice["participant"]["checked_in"])
 
@@ -274,9 +276,9 @@ class ParticipantsAPITests(unittest.TestCase):
         Marks a participant as having not checked in, setting checked_in_at to nil.
         """
 
-        alice = self.participants_api.add(self.tournament_id, name="Alice")
-        alice = self.participants_api.check_in(self.tournament_id, alice["participant"]["id"])
-        alice = self.participants_api.check_out(self.tournament_id, alice["participant"]["id"])
+        alice = self.api.participants.add(self.tournament_id, name="Alice")
+        alice = self.api.participants.check_in(self.tournament_id, alice["participant"]["id"])
+        alice = self.api.participants.check_out(self.tournament_id, alice["participant"]["id"])
 
         self.assertFalse(alice["participant"]["checked_in"])
 
@@ -287,11 +289,11 @@ class ParticipantsAPITests(unittest.TestCase):
         remaining matches.
         """
 
-        alice = self.participants_api.add(self.tournament_id, name="Alice")
-        ps = self.participants_api.get_all(self.tournament_id)
+        alice = self.api.participants.add(self.tournament_id, name="Alice")
+        ps = self.api.participants.get_all(self.tournament_id)
 
-        self.participants_api.remove(self.tournament_id, alice["participant"]["id"])
-        ps2 = self.participants_api.get_all(self.tournament_id)
+        self.api.participants.remove(self.tournament_id, alice["participant"]["id"])
+        ps2 = self.api.participants.get_all(self.tournament_id)
 
         self.assertTrue(len(ps) != len(ps2))
 
@@ -300,14 +302,14 @@ class ParticipantsAPITests(unittest.TestCase):
         Deletes all participants in a tournament. (Only allowed if tournament hasn't started yet)
         """
 
-        self.participants_api.add_multiple(
+        self.api.participants.add_multiple(
             tournament_id=self.tournament_id,
             names=["Alice", "Bob", "Charlie"],
             challonge_usernames_or_emails=self._generate_mock_email_addresses(3)
         )
 
-        self.participants_api.remove_all(self.tournament_id)
-        ps = self.participants_api.get_all(self.tournament_id)
+        self.api.participants.remove_all(self.tournament_id)
+        ps = self.api.participants.get_all(self.tournament_id)
 
         self.assertTrue(len(ps) == 0)
 
@@ -318,13 +320,13 @@ class ParticipantsAPITests(unittest.TestCase):
         NOTE: this test obviously has a 10% chance of failing.
         """
 
-        self.participants_api.add_multiple(
+        self.api.participants.add_multiple(
             tournament_id=self.tournament_id,
             names=["Alice", "Bob", "Charlie", "David", "Edward", "Frank", "Geoff", "Hector", "Isabelle", "James"],
             challonge_usernames_or_emails=self._generate_mock_email_addresses(10)
         )
 
-        ps = self.participants_api.randomize(self.tournament_id)
+        ps = self.api.participants.randomize(self.tournament_id)
 
         self.assertTrue(ps[0]["participant"]["name"] != "Alice")
 
@@ -333,14 +335,12 @@ class ParticipantsAPITests(unittest.TestCase):
 class MatchAPITests(unittest.TestCase):
 
     def setUp(self):
-        self.tournaments_api = TournamentAPI()
-        self.participants_api = ParticipantAPI()
-        self.matches_api = MatchAPI()
+        self.api = ChallongeApi()
 
         an_hour_from_now = ((datetime.now() + timedelta(hours=1)).isoformat() +
-                            self.tournaments_api.tz_utc_offset_string)
+                            self.api.http.tz_utc_offset_string)
 
-        self.tournament = self.tournaments_api.create(
+        self.tournament = self.api.tournaments.create(
             name="chyllonge-temp",
             start_at=an_hour_from_now,
             check_in_duration=60
@@ -350,13 +350,13 @@ class MatchAPITests(unittest.TestCase):
         self.tournament_name = self.tournament["tournament"]["name"]
 
         # pretend alice and bob are in a match
-        self.participants_api.add(self.tournament_id, name="Alice")
-        self.participants_api.add(self.tournament_id, name="Bob")
-        self.tournaments_api.process_checkins(self.tournament_id)
-        self.tournaments_api.start(self.tournament_id)
+        self.api.participants.add(self.tournament_id, name="Alice")
+        self.api.participants.add(self.tournament_id, name="Bob")
+        self.api.tournaments.process_checkins(self.tournament_id)
+        self.api.tournaments.start(self.tournament_id)
 
-        self.all_current_matches = self.matches_api.get_all(tournament_id=self.tournament_id)
-        self.all_current_participants = self.participants_api.get_all(self.tournament_id)
+        self.all_current_matches = self.api.matches.get_all(tournament_id=self.tournament_id)
+        self.all_current_participants = self.api.participants.get_all(self.tournament_id)
 
     def tearDown(self):
         delete_all_tournaments()
@@ -366,16 +366,16 @@ class MatchAPITests(unittest.TestCase):
 
     def test_get(self):
         match_id = self.all_current_matches[0]["match"]["id"]
-        match = self.matches_api.get(self.tournament_id, match_id)
+        match = self.api.matches.get(self.tournament_id, match_id)
 
         self.assertTrue(len(match) > 0)
 
     def test_update(self):
         match_id = self.all_current_matches[0]["match"]["id"]
-        self.matches_api.set_underway(self.tournament_id, match_id)
+        self.api.matches.set_underway(self.tournament_id, match_id)
         alice_id = self.all_current_participants[0]["participant"]["id"]
 
-        updated_match = self.matches_api.update(
+        updated_match = self.api.matches.update(
             self.tournament_id,
             match_id,
             match_scores_csv="3-1,2-2",
@@ -385,33 +385,33 @@ class MatchAPITests(unittest.TestCase):
 
     def test_reopen(self):
         match_id = self.all_current_matches[0]["match"]["id"]
-        self.matches_api.set_underway(self.tournament_id, match_id)
+        self.api.matches.set_underway(self.tournament_id, match_id)
         alice_id = self.all_current_participants[0]["participant"]["id"]
 
-        updated_match = self.matches_api.update(
+        updated_match = self.api.matches.update(
             self.tournament_id,
             match_id,
             match_scores_csv="3-1,2-2",
             match_winner_id=alice_id)["match"]
 
-        self.matches_api.reopen(self.tournament_id, updated_match["id"])
+        self.api.matches.reopen(self.tournament_id, updated_match["id"])
 
-        updated_match = self.matches_api.get(self.tournament_id, match_id)
+        updated_match = self.api.matches.get(self.tournament_id, match_id)
 
         self.assertTrue(updated_match["match"]["state"] == "open")
 
     def test_set_underway(self):
         match_id = self.all_current_matches[0]["match"]["id"]
-        self.matches_api.set_underway(self.tournament_id, match_id)
-        match = self.matches_api.get(self.tournament_id, match_id)["match"]
+        self.api.matches.set_underway(self.tournament_id, match_id)
+        match = self.api.matches.get(self.tournament_id, match_id)["match"]
 
         self.assertIsNotNone(match["underway_at"])
 
     def test_unset_underway(self):
         match_id = self.all_current_matches[0]["match"]["id"]
-        self.matches_api.set_underway(self.tournament_id, match_id)
-        self.matches_api.unset_underway(self.tournament_id, match_id)
-        match = self.matches_api.get(self.tournament_id, match_id)["match"]
+        self.api.matches.set_underway(self.tournament_id, match_id)
+        self.api.matches.unset_underway(self.tournament_id, match_id)
+        match = self.api.matches.get(self.tournament_id, match_id)["match"]
 
         self.assertIsNone(match["underway_at"])
 
@@ -420,15 +420,11 @@ class MatchAPITests(unittest.TestCase):
 class AttachmentAPITests(unittest.TestCase):
 
     def setUp(self):
-        self.tournaments_api = TournamentAPI()
-        self.participants_api = ParticipantAPI()
-        self.matches_api = MatchAPI()
-        self.attachments_api = AttachmentAPI()
+        self.api = ChallongeApi()
 
-        an_hour_from_now = ((datetime.now() + timedelta(hours=1)).isoformat() +
-                            self.tournaments_api.tz_utc_offset_string)
+        an_hour_from_now = ((datetime.now() + timedelta(hours=1)).isoformat() + self.api.http.tz_utc_offset_string)
 
-        self.tournament = self.tournaments_api.create(
+        self.tournament = self.api.tournaments.create(
             name="chyllonge-temp",
             start_at=an_hour_from_now,
             check_in_duration=60,
@@ -439,15 +435,15 @@ class AttachmentAPITests(unittest.TestCase):
         self.tournament_name = self.tournament["tournament"]["name"]
 
         # pretend alice and bob are in a match
-        self.participants_api.add(self.tournament_id, name="Alice")
-        self.participants_api.add(self.tournament_id, name="Bob")
-        self.tournaments_api.process_checkins(self.tournament_id)
-        self.tournaments_api.start(self.tournament_id)
+        self.api.participants.add(self.tournament_id, name="Alice")
+        self.api.participants.add(self.tournament_id, name="Bob")
+        self.api.tournaments.process_checkins(self.tournament_id)
+        self.api.tournaments.start(self.tournament_id)
 
-        self.all_current_matches = self.matches_api.get_all(tournament_id=self.tournament_id)
+        self.all_current_matches = self.api.matches.get_all(tournament_id=self.tournament_id)
         self.current_match = self.all_current_matches[0]["match"]
 
-        self.attachments_api.create(
+        self.api.attachments.create(
             self.tournament_id,
             self.current_match["id"],
             # just some image that shouldn't go away anytime soon
@@ -459,26 +455,26 @@ class AttachmentAPITests(unittest.TestCase):
         delete_all_tournaments()
 
     def test_get_all(self):
-        attachments = self.attachments_api.get_all(self.tournament_id, self.current_match["id"])
+        attachments = self.api.attachments.get_all(self.tournament_id, self.current_match["id"])
 
         self.assertIsNotNone(attachments)
 
     def test_create(self):
-        attachments = self.attachments_api.get_all(self.tournament_id, self.current_match["id"])
+        attachments = self.api.attachments.get_all(self.tournament_id, self.current_match["id"])
 
         self.assertIsNotNone(attachments)
 
     def test_get(self):
-        attachment_1 = self.attachments_api.get_all(self.tournament_id, self.current_match["id"])[0]["match_attachment"]
-        attachment_2 = self.attachments_api.get(self.tournament_id, self.current_match["id"], attachment_1["id"])
+        attachment_1 = self.api.attachments.get_all(self.tournament_id, self.current_match["id"])[0]["match_attachment"]
+        attachment_2 = self.api.attachments.get(self.tournament_id, self.current_match["id"], attachment_1["id"])
 
         self.assertIsNotNone(attachment_2)
 
     @unittest.skip
     def test_update(self):
-        attachment = self.attachments_api.get_all(self.tournament_id, self.current_match["id"])[0]["match_attachment"]
+        attachment = self.api.attachments.get_all(self.tournament_id, self.current_match["id"])[0]["match_attachment"]
 
-        self.attachments_api.update(
+        self.api.attachments.update(
             self.tournament_id,
             self.current_match["id"],
             attachment["id"],
@@ -487,14 +483,14 @@ class AttachmentAPITests(unittest.TestCase):
             match_attachment_description="chyllonge-test-2"
         )
 
-        attachment = self.attachments_api.get_all(self.tournament_id, self.current_match["id"])[0]["match_attachment"]
+        attachment = self.api.attachments.get_all(self.tournament_id, self.current_match["id"])[0]["match_attachment"]
 
         # TODO: this DOES work; the attachment is updated - figure out why the API doesn't realize that.
         self.assertTrue(attachment["url"] == "https://www.gstatic.com/webp/gallery3/2.png")
 
     def test_delete(self):
-        attachment = self.attachments_api.get_all(self.tournament_id, self.current_match["id"])[0]["match_attachment"]
-        self.attachments_api.delete(self.tournament_id, self.current_match["id"], attachment["id"])
-        attachments = self.attachments_api.get_all(self.tournament_id, self.current_match["id"])
+        attachment = self.api.attachments.get_all(self.tournament_id, self.current_match["id"])[0]["match_attachment"]
+        self.api.attachments.delete(self.tournament_id, self.current_match["id"], attachment["id"])
+        attachments = self.api.attachments.get_all(self.tournament_id, self.current_match["id"])
 
         self.assertTrue(len(attachments) == 0)
