@@ -29,24 +29,24 @@ api = ChallongeAPI()
 
 # create a basic tournament
 tournament = api.tournaments.create(name="My Chyllonge Tournament")
-print(tournament["tournament"]["id"])
+print(tournament["id"])
 
 # create a tournament that starts in an hour
 an_hour_from_now = (datetime.now() + timedelta(hours=1)).isoformat() + api.http.tz_utc_offset_string
 tournament = api.tournaments.create(name="My Chyllonge Tournament", start_at=an_hour_from_now, check_in_duration=60)
-print(tournament["tournament"]["id"])
+print(tournament["id"])
 
 # create a tournament, add Alice and Bob, process their check-ins, start the tournment, set their match underway,
 # score their match (congratulations Alice!), finalize the tournament
 an_hour_from_now = (datetime.now() + timedelta(hours=1)).isoformat() + api.http.tz_utc_offset_string
 tournament = api.tournaments.create(name="Alice and Bob Play Bingo", start_at=an_hour_from_now, check_in_duration=60)
-tournament_id = tournament["tournament"]["id"]
+tournament_id = tournament["id"]
 api.participants.add(tournament_id, name="Alice")
 api.participants.add(tournament_id, name="Bob")
 api.tournaments.process_checkins(tournament_id)
 api.tournaments.start(tournament_id)
 match_id = api.matches.get_all(tournament_id=tournament_id)[0]["match"]["id"]
-alice_id = api.participants.get_all(tournament_id)[0]["participant"]["id"]
+alice_id = api.participants.get_all(tournament_id)[0]["id"]
 api.matches.set_underway(tournament_id, match_id)
 api.matches.update(tournament_id, match_id, match_scores_csv="3-1,2-2", match_winner_id=alice_id)
 api.tournaments.finalize(tournament_id)

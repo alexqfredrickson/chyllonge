@@ -184,7 +184,10 @@ class TournamentAPI:
         }
 
         response = self.http.get("tournaments.json", params=params)
-        return response
+
+        tournaments = [t["tournament"] for t in response]
+
+        return tournaments
 
     def create(self, name: str = None, tournament_type: str = None, url: str = None, subdomain: str = None,
                description: str = None, open_signup: bool = None, hold_third_place_match: bool = None,
@@ -287,7 +290,10 @@ class TournamentAPI:
         }
 
         response = self.http.post("tournaments.json", params)
-        return response
+
+        tournament = response["tournament"]
+
+        return tournament
 
     def get(self, tournament_id: str, include_participants: int = None, include_matches: int = None):
         """
@@ -309,7 +315,10 @@ class TournamentAPI:
         }
 
         response = self.http.get(f"tournaments/{tournament_id}.json", params=params)
-        return response
+
+        tournament = response["tournament"]
+
+        return tournament
 
     def update(self, tournament_id: str, name: str = None, tournament_type: str = None,
                url: str = None, subdomain: str = None, description: str = None, open_signup: bool = None,
@@ -414,7 +423,10 @@ class TournamentAPI:
         }
 
         response = self.http.put(f"tournaments/{tournament_id}.json", params=params)
-        return response
+
+        tournament = response["tournament"]
+
+        return tournament
 
     def delete(self, tournament_id: str):
         """
@@ -424,7 +436,10 @@ class TournamentAPI:
         """
 
         response = self.http.delete(f"tournaments/{tournament_id}.json")
-        return response
+
+        tournament = response["tournament"]
+
+        return tournament
 
     def process_checkins(self, tournament_id: str, include_participants: int = None,
                          include_matches: int = None):
@@ -450,7 +465,10 @@ class TournamentAPI:
         }
 
         response = self.http.post(f"tournaments/{tournament_id}/process_check_ins.json", params)
-        return response
+
+        tournament = response["tournament"]
+
+        return tournament
 
     def abort_checkins(self, tournament_id: str, include_participants: int = None, include_matches: int = None):
         """
@@ -474,7 +492,10 @@ class TournamentAPI:
         }
 
         response = self.http.post(f"tournaments/{tournament_id}/abort_check_in.json", params)
-        return response
+
+        tournament = response["tournament"]
+
+        return tournament
 
     def start(self, tournament_id: str, include_participants: int = None, include_matches: int = None):
         """
@@ -499,7 +520,10 @@ class TournamentAPI:
             raise ChallongeAPIException("ERROR: A tournament needs at least two participants in order to start.")
         else:
             response = self.http.post(f"tournaments/{tournament_id}/start.json", params)
-            return response
+
+            tournament = response["tournament"]
+
+            return tournament
 
     def finalize(self, tournament_id: str, include_participants: int = None, include_matches: int = None):
         """
@@ -518,7 +542,10 @@ class TournamentAPI:
         }
 
         response = self.http.post(f"tournaments/{tournament_id}/finalize.json", params)
-        return response
+
+        tournament = response["tournament"]
+
+        return tournament
 
     def reset(self, tournament_id: str, include_participants: int = None, include_matches: int = None):
         """
@@ -538,7 +565,10 @@ class TournamentAPI:
         }
 
         response = self.http.post(f"tournaments/{tournament_id}/reset.json", params)
-        return response
+
+        tournament = response["tournament"]
+
+        return tournament
 
     def open_for_predictions(self, tournament_id: str, include_participants: int = None,
                              include_matches: int = None):
@@ -562,7 +592,10 @@ class TournamentAPI:
         }
 
         response = self.http.post(f"tournaments/{tournament_id}/open_for_predictions.json", params)
-        return response
+
+        tournament = response["tournament"]
+
+        return tournament
 
 
 class ParticipantAPI:
@@ -576,7 +609,10 @@ class ParticipantAPI:
         """
 
         response = self.http.get(f"tournaments/{tournament_id}/participants.json")
-        return response
+
+        participants = [p["participant"] for p in response]
+
+        return participants
 
     def add(self, tournament_id: str, name: str = None, challonge_username: str = None, email: str = None,
             seed: str = None, misc: str = None):
@@ -593,7 +629,10 @@ class ParticipantAPI:
         }
 
         response = self.http.post(f"tournaments/{tournament_id}/participants.json", params)
-        return response
+
+        participant = response["participant"]
+
+        return participant
 
     def add_multiple(self, tournament_id: str, names: List[str] = None,
                      challonge_usernames_or_emails: List[str] = None, seeds: List[str] = None,
@@ -615,7 +654,10 @@ class ParticipantAPI:
         }
 
         response = self.http.post(f"tournaments/{tournament_id}/participants/bulk_add.json", params)
-        return response
+
+        participant = response["participant"]
+
+        return participant
 
     def get(self, tournament_id: str, participant_id: int = None, include_matches: bool = False):
         """
@@ -625,7 +667,10 @@ class ParticipantAPI:
         params = {"include_matches": include_matches}
 
         response = self.http.get(f"tournaments/{tournament_id}/participants/{participant_id}.json", params)
-        return response
+
+        participant = response["participant"]
+
+        return participant
 
     def update(self, tournament_id: str, participant_id: str, participant_name: str = None,
                participant_challonge_username: str = None, participant_email: str = None,
@@ -643,7 +688,10 @@ class ParticipantAPI:
         }
 
         response = self.http.put(f"tournaments/{tournament_id}/participants/{participant_id}.json", params)
-        return response
+
+        participant = response["participant"]
+
+        return participant
 
     def check_in(self, tournament_id: str, participant_id: str):
         """
@@ -651,7 +699,10 @@ class ParticipantAPI:
         """
 
         response = self.http.post(f"tournaments/{tournament_id}/participants/{participant_id}/check_in.json")
-        return response
+
+        participant = response["participant"]
+
+        return participant
 
     def check_out(self, tournament_id: str, participant_id: str):
         """
@@ -659,7 +710,10 @@ class ParticipantAPI:
         """
 
         response = self.http.post(f"tournaments/{tournament_id}/participants/{participant_id}/undo_check_in.json")
-        return response
+
+        participant = response["participant"]
+
+        return participant
 
     def remove(self, tournament_id: str, participant_id: str):
         """
@@ -669,7 +723,10 @@ class ParticipantAPI:
         """
 
         response = self.http.delete(f"tournaments/{tournament_id}/participants/{participant_id}.json")
-        return response
+
+        participant = response["participant"]
+
+        return participant
 
     def remove_all(self, tournament_id: str):
         """
@@ -677,7 +734,10 @@ class ParticipantAPI:
         """
 
         response = self.http.delete(f"tournaments/{tournament_id}/participants/clear.json")
-        return response
+
+        participant = response["participant"]
+
+        return participant
 
     def randomize(self, tournament_id: str):
         """
@@ -685,7 +745,10 @@ class ParticipantAPI:
         """
 
         response = self.http.post(f"tournaments/{tournament_id}/participants/randomize.json")
-        return response
+
+        participant = response["participant"]
+
+        return participant
 
 
 class AttachmentAPI:
