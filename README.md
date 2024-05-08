@@ -20,7 +20,7 @@ To install `chyllonge`, execute `pip install chyllonge`.
 ## Usage
 
 ```python
-from chyllonge import TournamentAPI
+from chyllonge.api import TournamentAPI
 
 # create a tournament
 tournaments_api = TournamentAPI()
