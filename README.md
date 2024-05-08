@@ -45,7 +45,7 @@ api.participants.add(tournament_id, name="Alice")
 api.participants.add(tournament_id, name="Bob")
 api.tournaments.process_checkins(tournament_id)
 api.tournaments.start(tournament_id)
-match_id = api.matches.get_all(tournament_id=tournament_id)[0]["match"]["id"]
+match_id = api.matches.get_all(tournament_id=tournament_id)[0]["id"]
 alice_id = api.participants.get_all(tournament_id)[0]["id"]
 api.matches.set_underway(tournament_id, match_id)
 api.matches.update(tournament_id, match_id, match_scores_csv="3-1,2-2", match_winner_id=alice_id)

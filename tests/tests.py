@@ -119,7 +119,7 @@ class TournamentAPITests(unittest.TestCase):
         self.api.tournaments.process_checkins(self.tournament["id"])
         self.api.tournaments.start(self.tournament["id"])
 
-        match_id = self.api.matches.get_all(tournament_id=self.tournament["id"])[0]["match"]["id"]
+        match_id = self.api.matches.get_all(tournament_id=self.tournament["id"])[0]["id"]
         alice_id = self.api.participants.get_all(self.tournament["id"])[0]["id"]
 
         self.api.matches.set_underway(self.tournament["id"], match_id)
@@ -136,7 +136,7 @@ class TournamentAPITests(unittest.TestCase):
         self.api.tournaments.process_checkins(self.tournament["id"])
         self.api.tournaments.start(self.tournament["id"])
 
-        match_id = self.api.matches.get_all(tournament_id=self.tournament["id"])[0]["match"]["id"]
+        match_id = self.api.matches.get_all(tournament_id=self.tournament["id"])[0]["id"]
         alice_id = self.api.participants.get_all(self.tournament["id"])[0]["id"]
 
         self.api.matches.set_underway(self.tournament["id"], match_id)
@@ -319,7 +319,6 @@ class ParticipantsAPITests(unittest.TestCase):
         self.assertTrue(ps[0]["name"] != "Alice")
 
 
-@unittest.skip
 class MatchAPITests(unittest.TestCase):
 
     def setUp(self):
@@ -350,13 +349,13 @@ class MatchAPITests(unittest.TestCase):
         self.assertTrue(len(self.all_current_matches) > 0)
 
     def test_get(self):
-        match_id = self.all_current_matches[0]["match"]["id"]
+        match_id = self.all_current_matches[0]["id"]
         match = self.api.matches.get(self.tournament["id"], match_id)
 
         self.assertTrue(len(match) > 0)
 
     def test_update(self):
-        match_id = self.all_current_matches[0]["match"]["id"]
+        match_id = self.all_current_matches[0]["id"]
         self.api.matches.set_underway(self.tournament["id"], match_id)
         alice_id = self.all_current_participants[0]["id"]
 
@@ -364,12 +363,12 @@ class MatchAPITests(unittest.TestCase):
             self.tournament["id"],
             match_id,
             match_scores_csv="3-1,2-2",
-            match_winner_id=alice_id)["match"]
+            match_winner_id=alice_id)
 
         self.assertIsNotNone(updated_match["scores_csv"])
 
     def test_reopen(self):
-        match_id = self.all_current_matches[0]["match"]["id"]
+        match_id = self.all_current_matches[0]["id"]
         self.api.matches.set_underway(self.tournament["id"], match_id)
         alice_id = self.all_current_participants[0]["id"]
 
@@ -377,31 +376,30 @@ class MatchAPITests(unittest.TestCase):
             self.tournament["id"],
             match_id,
             match_scores_csv="3-1,2-2",
-            match_winner_id=alice_id)["match"]
+            match_winner_id=alice_id)
 
         self.api.matches.reopen(self.tournament["id"], updated_match["id"])
 
         updated_match = self.api.matches.get(self.tournament["id"], match_id)
 
-        self.assertTrue(updated_match["match"]["state"] == "open")
+        self.assertTrue(updated_match["state"] == "open")
 
     def test_set_underway(self):
-        match_id = self.all_current_matches[0]["match"]["id"]
+        match_id = self.all_current_matches[0]["id"]
         self.api.matches.set_underway(self.tournament["id"], match_id)
-        match = self.api.matches.get(self.tournament["id"], match_id)["match"]
+        match = self.api.matches.get(self.tournament["id"], match_id)
 
         self.assertIsNotNone(match["underway_at"])
 
     def test_unset_underway(self):
-        match_id = self.all_current_matches[0]["match"]["id"]
+        match_id = self.all_current_matches[0]["id"]
         self.api.matches.set_underway(self.tournament["id"], match_id)
         self.api.matches.unset_underway(self.tournament["id"], match_id)
-        match = self.api.matches.get(self.tournament["id"], match_id)["match"]
+        match = self.api.matches.get(self.tournament["id"], match_id)
 
         self.assertIsNone(match["underway_at"])
 
 
-@unittest.skip
 class AttachmentAPITests(unittest.TestCase):
 
     def setUp(self):
@@ -423,7 +421,7 @@ class AttachmentAPITests(unittest.TestCase):
         self.api.tournaments.start(self.tournament["id"])
 
         self.all_current_matches = self.api.matches.get_all(tournament_id=self.tournament["id"])
-        self.current_match = self.all_current_matches[0]["match"]
+        self.current_match = self.all_current_matches[0]
 
         self.api.attachments.create(
             self.tournament["id"],
@@ -447,14 +445,14 @@ class AttachmentAPITests(unittest.TestCase):
         self.assertIsNotNone(attachments)
 
     def test_get(self):
-        attachment_1 = self.api.attachments.get_all(self.tournament["id"], self.current_match["id"])[0]["match_attachment"]
+        attachment_1 = self.api.attachments.get_all(self.tournament["id"], self.current_match["id"])[0]
         attachment_2 = self.api.attachments.get(self.tournament["id"], self.current_match["id"], attachment_1["id"])
 
         self.assertIsNotNone(attachment_2)
 
     @unittest.skip
     def test_update(self):
-        attachment = self.api.attachments.get_all(self.tournament["id"], self.current_match["id"])[0]["match_attachment"]
+        attachment = self.api.attachments.get_all(self.tournament["id"], self.current_match["id"])[0]
 
         self.api.attachments.update(
             self.tournament["id"],
@@ -465,13 +463,13 @@ class AttachmentAPITests(unittest.TestCase):
             match_attachment_description="chyllonge-test-2"
         )
 
-        attachment = self.api.attachments.get_all(self.tournament["id"], self.current_match["id"])[0]["match_attachment"]
+        attachment = self.api.attachments.get_all(self.tournament["id"], self.current_match["id"])[0]
 
         # TODO: this DOES work; the attachment is updated - figure out why the API doesn't realize that.
         self.assertTrue(attachment["url"] == "https://www.gstatic.com/webp/gallery3/2.png")
 
     def test_delete(self):
-        attachment = self.api.attachments.get_all(self.tournament["id"], self.current_match["id"])[0]["match_attachment"]
+        attachment = self.api.attachments.get_all(self.tournament["id"], self.current_match["id"])[0]
         self.api.attachments.delete(self.tournament["id"], self.current_match["id"], attachment["id"])
         attachments = self.api.attachments.get_all(self.tournament["id"], self.current_match["id"])
 

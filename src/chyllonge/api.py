@@ -655,9 +655,9 @@ class ParticipantAPI:
 
         response = self.http.post(f"tournaments/{tournament_id}/participants/bulk_add.json", params)
 
-        participant = response["participant"]
+        participants = [p["participant"] for p in response]
 
-        return participant
+        return participants
 
     def get(self, tournament_id: str, participant_id: int = None, include_matches: bool = False):
         """
@@ -735,9 +735,9 @@ class ParticipantAPI:
 
         response = self.http.delete(f"tournaments/{tournament_id}/participants/clear.json")
 
-        participant = response["participant"]
+        participants = [p["participant"] for p in response]
 
-        return participant
+        return participants
 
     def randomize(self, tournament_id: str):
         """
@@ -746,9 +746,101 @@ class ParticipantAPI:
 
         response = self.http.post(f"tournaments/{tournament_id}/participants/randomize.json")
 
-        participant = response["participant"]
+        participants = [p["participant"] for p in response]
 
-        return participant
+        return participants
+
+
+class MatchAPI:
+
+    def __init__(self, http_methods):
+        self.http = http_methods
+
+    def get_all(self, tournament_id: str, state: str = None, participant_id: str = None):
+        """
+        Retrieve a tournament's match list.
+        """
+
+        params = {"state": state, "participant_id": participant_id}
+        response = self.http.get(f"tournaments/{tournament_id}/matches.json", params)
+
+        matches = [m["match"] for m in response]
+
+        return matches
+
+    def get(self, tournament_id: str, match_id: str = None, include_attachments: int = 0):
+        """
+        Retrieve a single match record for a tournament.
+        """
+
+        params = {"include_attachments": include_attachments}
+        response = self.http.get(f"tournaments/{tournament_id}/matches/{match_id}.json", params)
+
+        match = response["match"]
+
+        return match
+
+    def update(self, tournament_id: str, match_id: str = None, match_scores_csv: str = None,
+               match_winner_id: str = None, match_player1_votes: str = None, match_player2_votes: str = None):
+        """
+        Update/submit the score(s) for a match. 'If you're updating winner_id, scores_csv must also be provided. You
+        may, however, update score_csv without providing winner_id for live score updates.'
+
+        :param tournament_id: A tournament ID.
+        :param match_id: A match ID.
+        :param match_scores_csv: Comma separated set/game scores with player 1 score first (e.g. "1-3,3-0,3-2")
+        :param match_winner_id: The participant ID of the winner or "tie" if applicable (Round Robin and Swiss).
+               NOTE: If you change the outcome of a completed match, all matches in the bracket that branch
+               from the updated match will be reset.
+        :param match_player1_votes: Overwrites the number of votes for player 1.
+        :param match_player2_votes: Overwrites the number of votes for player 2.
+        """
+
+        params = {
+            "match[scores_csv]": match_scores_csv,
+            "match[winner_id]": match_winner_id,
+            "match[player1_votes]": match_player1_votes,
+            "match[player2_votes]": match_player2_votes
+        }
+
+        response = self.http.put(f"tournaments/{tournament_id}/matches/{match_id}.json", params)
+
+        match = response["match"]
+
+        return match
+
+    def reopen(self, tournament_id: str, match_id: str = None):
+        """
+        Reopens a match that was marked completed, automatically resetting matches that follow it.
+        """
+
+        response = self.http.post(f"tournaments/{tournament_id}/matches/{match_id}/reopen.json")
+
+        match = response["match"]
+
+        return match
+
+    def set_underway(self, tournament_id: str, match_id: str = None):
+        """
+        Sets "underway_at" to the current time and highlights the match in the bracket
+        """
+
+        response = self.http.post(f"tournaments/{tournament_id}/matches/{match_id}/mark_as_underway.json")
+
+        match = response["match"]
+
+        return match
+
+    def unset_underway(self, tournament_id: str, match_id: str = None):
+        """
+        Clears "underway_at" and unhighlights the match in the bracket
+        """
+
+        response = self.http.post(f"tournaments/{tournament_id}/matches/{match_id}/unmark_as_underway.json")
+
+        match = response["match"]
+
+        return match
 
 
 class AttachmentAPI:
@@ -785,7 +877,10 @@ class AttachmentAPI:
         }
 
         response = self.http.post(f"tournaments/{tournament_id}/matches/{match_id}/attachments.json", params)
-        return response
+
+        match_attachment = response["match_attachment"]
+
+        return match_attachment
 
     def get(self, tournament_id: str, match_id: str = None, attachment_id: str = None):
         """
@@ -793,7 +888,10 @@ class AttachmentAPI:
         """
 
         response = self.http.get(f"tournaments/{tournament_id}/matches/{match_id}/attachments/{attachment_id}.json")
-        return response
+
+        match_attachment = response["match_attachment"]
+
+        return match_attachment
 
     def update(self, tournament_id: str, match_id: str = None, attachment_id: str = None,
                match_attachment_asset: str = None, match_attachment_url: str = None,
@@ -821,7 +919,10 @@ class AttachmentAPI:
         response = self.http.put(
             f"tournaments/{tournament_id}/matches/{match_id}/attachments/{attachment_id}.json", params
         )
-        return response
+
+        match_attachment = response["match_attachment"]
+
+        return match_attachment
 
     def delete(self, tournament_id: str, match_id: str = None, attachment_id: str = None):
         """
@@ -829,78 +930,9 @@ class AttachmentAPI:
         """
 
         response = self.http.delete(f"tournaments/{tournament_id}/matches/{match_id}/attachments/{attachment_id}.json")
-        return response
+
+        match_attachment = response["match_attachment"]
+
+        return match_attachment
 
 
-class MatchAPI:
-
-    def __init__(self, http_methods):
-        self.http = http_methods
-
-    def get_all(self, tournament_id: str, state: str = None, participant_id: str = None):
-        """
-        Retrieve a tournament's match list.
-        """
-
-        params = {"state": state, "participant_id": participant_id}
-        response = self.http.get(f"tournaments/{tournament_id}/matches.json", params)
-        return response
-
-    def get(self, tournament_id: str, match_id: str = None, include_attachments: int = 0):
-        """
-        Retrieve a single match record for a tournament.
-        """
-
-        params = {"include_attachments": include_attachments}
-        response = self.http.get(f"tournaments/{tournament_id}/matches/{match_id}.json", params)
-        return response
-
-    def update(self, tournament_id: str, match_id: str = None, match_scores_csv: str = None,
-               match_winner_id: str = None, match_player1_votes: str = None, match_player2_votes: str = None):
-        """
-        Update/submit the score(s) for a match. 'If you're updating winner_id, scores_csv must also be provided. You
-        may, however, update score_csv without providing winner_id for live score updates.'
-
-        :param tournament_id: A tournament ID.
-        :param match_id: A match ID.
-        :param match_scores_csv: Comma separated set/game scores with player 1 score first (e.g. "1-3,3-0,3-2")
-        :param match_winner_id: The participant ID of the winner or "tie" if applicable (Round Robin and Swiss).
-               NOTE: If you change the outcome of a completed match, all matches in the bracket that branch
-               from the updated match will be reset.
-        :param match_player1_votes: Overwrites the number of votes for player 1.
-        :param match_player2_votes: Overwrites the number of votes for player 2.
-        """
-
-        params = {
-            "match[scores_csv]": match_scores_csv,
-            "match[winner_id]": match_winner_id,
-            "match[player1_votes]": match_player1_votes,
-            "match[player2_votes]": match_player2_votes
-        }
-
-        response = self.http.put(f"tournaments/{tournament_id}/matches/{match_id}.json", params)
-        return response
-
-    def reopen(self, tournament_id: str, match_id: str = None):
-        """
-        Reopens a match that was marked completed, automatically resetting matches that follow it.
-        """
-
-        response = self.http.post(f"tournaments/{tournament_id}/matches/{match_id}/reopen.json")
-        return response
-
-    def set_underway(self, tournament_id: str, match_id: str = None):
-        """
-        Sets "underway_at" to the current time and highlights the match in the bracket
-        """
-
-        response = self.http.post(f"tournaments/{tournament_id}/matches/{match_id}/mark_as_underway.json")
-        return response
-
-    def unset_underway(self, tournament_id: str, match_id: str = None):
-        """
-        Clears "underway_at" and unhighlights the match in the bracket
-        """
-
-        response = self.http.post(f"tournaments/{tournament_id}/matches/{match_id}/unmark_as_underway.json")
-        return response
