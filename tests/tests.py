@@ -296,10 +296,9 @@ class ParticipantsAPITests(unittest.TestCase):
             challonge_usernames_or_emails=self._generate_mock_email_addresses(3)
         )
 
-        self.api.participants.remove_all(self.tournament["id"])
-        ps = self.api.participants.get_all(self.tournament["id"])
+        response_message = self.api.participants.remove_all(self.tournament["id"])
 
-        self.assertTrue(len(ps) == 0)
+        self.assertTrue(response_message == "Cleared all participants")
 
     def test_randomize_participants(self):
         """

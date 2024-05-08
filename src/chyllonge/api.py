@@ -735,9 +735,7 @@ class ParticipantAPI:
 
         response = self.http.delete(f"tournaments/{tournament_id}/participants/clear.json")
 
-        participants = [p["participant"] for p in response]
-
-        return participants
+        return response["message"]  # "Cleared all participants"
 
     def randomize(self, tournament_id: str):
         """
@@ -854,7 +852,10 @@ class AttachmentAPI:
         """
 
         response = self.http.get(f"tournaments/{tournament_id}/matches/{match_id}/attachments.json")
-        return response
+
+        match_attachments = [ma["match_attachment"] for ma in response]
+
+        return match_attachments
 
     def create(self, tournament_id: str, match_id: str = None, match_attachment_asset: str = None,
                match_attachment_url: str = None, match_attachment_description: str = None):
