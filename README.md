@@ -40,17 +40,22 @@ print(tournament["id"])
 # score their match (congratulations Alice!), finalize the tournament
 an_hour_from_now = (datetime.now() + timedelta(hours=1)).isoformat() + api.http.tz_utc_offset_string
 tournament = api.tournaments.create(name="Alice and Bob Play Bingo", start_at=an_hour_from_now, check_in_duration=60)
-tournament_id = tournament["id"]
-api.participants.add(tournament_id, name="Alice")
-api.participants.add(tournament_id, name="Bob")
-api.tournaments.process_checkins(tournament_id)
-api.tournaments.start(tournament_id)
-match_id = api.matches.get_all(tournament_id=tournament_id)[0]["id"]
-alice_id = api.participants.get_all(tournament_id)[0]["id"]
-api.matches.set_underway(tournament_id, match_id)
-api.matches.update(tournament_id, match_id, match_scores_csv="3-1,2-2", match_winner_id=alice_id)
-api.tournaments.finalize(tournament_id)
-finished_tournment = api.tournaments.get(tournament_id)
+
+api.participants.add(tournament["id"], name="Alice")
+api.participants.add(tournament["id"], name="Bob")
+
+api.tournaments.process_checkins(tournament["id"])
+api.tournaments.start(tournament["id"])
+
+match = api.matches.get_all(tournament_id=tournament["id"])[0]
+alice = api.participants.get_all(tournament["id"])[0]
+
+api.matches.set_underway(tournament["id"], match["id"])
+api.matches.update(tournament["id"], match["id"], match_scores_csv="3-1,2-2", match_winner_id=alice["id"])
+
+api.tournaments.finalize(tournament["id"])
+
+finished_tournment = api.tournaments.get(tournament["id"])
 ```
 
 ## History
